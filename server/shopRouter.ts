@@ -48,6 +48,8 @@ export const shopRouter = router({
     saveProduct: adminProcedure.input(productInput).mutation(({ input }) => shopDb.saveProduct(input)),
     setProductVisibility: adminProcedure.input(z.object({ id: z.number().int().positive(), isActive: z.boolean() }))
       .mutation(({ input }) => shopDb.setProductVisibility(input.id, input.isActive)),
+    deleteProduct: adminProcedure.input(z.object({ id: z.number().int().positive() }))
+      .mutation(({ input }) => shopDb.deleteProduct(input.id)),
     orders: adminProcedure.query(() => shopDb.listOrders()),
     updateOrderStatus: adminProcedure.input(z.object({ id: z.number().int().positive(), status: statusInput }))
       .mutation(({ input }) => shopDb.updateOrderStatus(input.id, input.status)),

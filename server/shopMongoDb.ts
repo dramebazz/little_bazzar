@@ -157,6 +157,12 @@ export async function setProductVisibility(id: number, isActive: boolean) {
   await products.updateOne({ id }, { $set: { isActive, updatedAt: new Date() } });
   return { success: true } as const;
 }
+export async function deleteProduct(id: number) {
+  const { products } = await collections();
+  const result = await products.deleteOne({ id });
+  if (result.deletedCount !== 1) throw new TRPCError({ code: "NOT_FOUND", message: "Product not found." });
+  return { success: true } as const;
+}
 export async function listOrders() {
   const { orders, items } = await collections();
   const [allOrders, allItems] = await Promise.all([orders.find({}).sort({ createdAt: -1 }).toArray(), items.find({}).toArray()]);

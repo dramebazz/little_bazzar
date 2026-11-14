@@ -103,6 +103,13 @@ export async function setProductVisibility(id: number, isActive: boolean) {
   return { success: true } as const;
 }
 
+export async function deleteProduct(id: number) {
+  const db = await database();
+  const result = await db.delete(products).where(eq(products.id, id));
+  if (result[0].affectedRows !== 1) throw new TRPCError({ code: "NOT_FOUND", message: "Product not found." });
+  return { success: true } as const;
+}
+
 export async function listOrders() {
   const db = await database();
   const allOrders = await db.select().from(orders).orderBy(desc(orders.createdAt));

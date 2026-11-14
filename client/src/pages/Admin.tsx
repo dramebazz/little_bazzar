@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { TRPCClientError } from "@trpc/client";
 import type { inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "../../../server/routers";
-import { Archive, ArrowLeft, ClipboardList, ImagePlus, LogIn, LogOut, Package, Plus, ShieldCheck, Sparkles, Store, X } from "lucide-react";
+import { Archive, ArrowLeft, ClipboardList, ImagePlus, LogIn, LogOut, Package, Plus, ShieldCheck, Sparkles, Store, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -67,6 +67,10 @@ export default function Admin() {
   });
   const setProductVisibility = trpc.shop.admin.setProductVisibility.useMutation({
     onSuccess: async (_result, variables) => { toast.success(variables.isActive ? "Product restored to your shop" : "Product hidden from your shop"); await Promise.all([utils.shop.admin.products.invalidate(), utils.shop.catalog.invalidate()]); },
+    onError: error => toast.error(getErrorMessage(error)),
+  });
+  const deleteProduct = trpc.shop.admin.deleteProduct.useMutation({
+    onSuccess: async () => { toast.success("Product deleted from your shop"); await Promise.all([utils.shop.admin.products.invalidate(), utils.shop.catalog.invalidate()]); },
     onError: error => toast.error(getErrorMessage(error)),
   });
   const updateStatus = trpc.shop.admin.updateOrderStatus.useMutation({
@@ -158,7 +162,7 @@ export default function Admin() {
         </div>
         <section className="admin-content-card">
           <div className="admin-content-head"><div><div className="admin-tabs"><button onClick={() => setSection("products")} className={section === "products" ? "active" : ""}>Products</button><button onClick={() => setSection("orders")} className={section === "orders" ? "active" : ""}>Orders{awaiting > 0 && <span className="tab-count">{awaiting}</span>}</button></div><p>{section === "products" ? "Keep your little collection up to date." : "Every order, all in one place."}</p></div>{section === "products" && <button className="button button-outline compact-add" onClick={() => openEditor()}><Plus size={16} /> Add product</button>}</div>
-          {section === "products" ? <ProductList products={products} loading={productsQuery.isLoading} onEdit={openEditor} onVisibility={(id, isActive) => { if (isActive || window.confirm("Hide this product from the storefront? Existing order history will be kept.")) setProductVisibility.mutate({ id, isActive }); }} /> : <OrderList orders={orders} loading={ordersQuery.isLoading} onStatus={(id, status) => updateStatus.mutate({ id, status })} />}
+          {section === "products" ? <ProductList products={products} loading={productsQuery.isLoading} onEdit={openEditor} onVisibility={(id, isActive) => { if (isActive || window.confirm("Hide this product from the storefront? Existing order history will be kept.")) setProductVisibility.mutate({ id, isActive }); }} onDelete={id => { if (window.confirm("Delete this product permanently? Existing order history will be kept.")) deleteProduct.mutate({ id }); }} /> : <OrderList orders={orders} loading={ordersQuery.isLoading} onStatus={(id, status) => updateStatus.mutate({ id, status })} />}
         </section>
         <div className="admin-help"><Store size={16} /> Your store data is saved securely. Hidden products remain in the history of orders they were part of.</div>
       </>}
@@ -169,11 +173,11 @@ export default function Admin() {
 
 type Product = inferRouterOutputs<AppRouter>["shop"]["admin"]["products"][number];
 
-function ProductList({ products, loading, onEdit, onVisibility }: { products: Product[]; loading: boolean; onEdit: (product?: Product) => void; onVisibility: (id: number, isActive: boolean) => void }) {
+function ProductList({ products, loading, onEdit, onVisibility, onDelete }: { products: Product[]; loading: boolean; onEdit: (product?: Product) => void; onVisibility: (id: number, isActive: boolean) => void; onDelete: (id: number) => void }) {
   if (loading) return <div className="admin-empty">Loading your products…</div>;
   if (products.length === 0) return <div className="admin-empty"><div className="empty-parcel small-parcel"><Package size={25} /></div><h3>Your shop is ready for its first find</h3><p>Add a product with a photo, price, and a few details. It will appear in the storefront right away.</p><button className="button button-primary" onClick={() => onEdit()}><Plus size={16} /> Add your first product</button></div>;
   return <div className="product-admin-list">{products.map(product => <article className={`product-admin-row ${!product.isActive ? "archived" : ""}`} key={product.id}>
-    <img src={product.imageUrl} alt="" /><div className="admin-product-info"><strong>{product.name}</strong><span>{product.category} <i>·</i> {formatINR(product.price)}</span></div><div className="admin-stock"><b>{product.stock}</b><small>in stock</small></div><span className={`status-pill ${product.isActive ? "status-live" : "status-cancelled"}`}>{product.isActive ? "Live" : "Hidden"}</span><div className="row-actions"><button onClick={() => onEdit(product)}>Edit</button><button className={product.isActive ? "archive-action" : "restore-action"} onClick={() => onVisibility(product.id, !product.isActive)} title={product.isActive ? "Hide product" : "Restore product"}>{product.isActive ? <Archive size={15} /> : "Restore"}</button></div>
+    <img src={product.imageUrl} alt="" /><div className="admin-product-info"><strong>{product.name}</strong><span>{product.category} <i>·</i> {formatINR(product.price)}</span></div><div className="admin-stock"><b>{product.stock}</b><small>in stock</small></div><span className={`status-pill ${product.isActive ? "status-live" : "status-cancelled"}`}>{product.isActive ? "Live" : "Hidden"}</span><div className="row-actions"><button onClick={() => onEdit(product)}>Edit</button><button className={product.isActive ? "archive-action" : "restore-action"} onClick={() => onVisibility(product.id, !product.isActive)} title={product.isActive ? "Hide product" : "Restore product"}>{product.isActive ? <Archive size={15} /> : "Restore"}</button><button className="delete-action" onClick={() => onDelete(product.id)} title="Delete product" aria-label={`Delete ${product.name}`}><Trash2 size={15} /></button></div>
   </article>)}</div>;
 }
 

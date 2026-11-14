@@ -29,6 +29,10 @@ export async function setProductVisibility(id: number, isActive: boolean) {
   return (await adapter()).setProductVisibility(id, isActive);
 }
 
+export async function deleteProduct(id: number) {
+  return (await adapter()).deleteProduct(id);
+}
+
 export async function listOrders() {
   return (await adapter()).listOrders();
 }
