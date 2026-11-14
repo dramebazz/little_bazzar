@@ -1,0 +1,16 @@
+node_modules/
+.git/
+dist/
+build/
+coverage/
+.env*
+.vercel/
+*.bak
+.*-logs/
+.*-starter-init.json
+plan.md
+TODO.md
+template.json
+Dockerfile
+.dockerignore
+client/public/*routes.json
