@@ -13,7 +13,7 @@ import Account from "./pages/Account";
 function Router() {
   return <Switch>
     <Route path="/" component={Home} />
-    <Route path="/product/:id" component={ProductDetail} />
+    <Route path="/product/:publicId" component={ProductDetail} />
     <Route path="/admin" component={Admin} />
     <Route path="/account" component={Account} />
     <Route path="/404" component={NotFound} />

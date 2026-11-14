@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { formatINR } from "@/lib/shop";
+import { getErrorMessage } from "@/lib/errorMessage";
 
 const statuses = ["new", "confirmed", "packed", "shipped", "delivered", "cancelled"] as const;
 type OrderStatus = typeof statuses[number];
@@ -58,19 +59,19 @@ export default function Admin() {
   const utils = trpc.useUtils();
   const loginAdmin = trpc.auth.loginAdmin.useMutation({
     onSuccess: async () => { setLoginPassword(""); toast.success("You’re signed in to your shop"); await utils.auth.me.invalidate(); },
-    onError: error => toast.error(error.message),
+    onError: error => toast.error(getErrorMessage(error)),
   });
   const saveProduct = trpc.shop.admin.saveProduct.useMutation({
     onSuccess: async () => { toast.success(editingId ? "Product updated" : "Product added to your shop"); setEditorOpen(false); await Promise.all([utils.shop.admin.products.invalidate(), utils.shop.catalog.invalidate()]); },
-    onError: error => toast.error(error.message),
+    onError: error => toast.error(getErrorMessage(error)),
   });
   const setProductVisibility = trpc.shop.admin.setProductVisibility.useMutation({
     onSuccess: async (_result, variables) => { toast.success(variables.isActive ? "Product restored to your shop" : "Product hidden from your shop"); await Promise.all([utils.shop.admin.products.invalidate(), utils.shop.catalog.invalidate()]); },
-    onError: error => toast.error(error.message),
+    onError: error => toast.error(getErrorMessage(error)),
   });
   const updateStatus = trpc.shop.admin.updateOrderStatus.useMutation({
     onSuccess: async () => { toast.success("Order status updated"); await utils.shop.admin.orders.invalidate(); },
-    onError: error => toast.error(error.message),
+    onError: error => toast.error(getErrorMessage(error)),
   });
   const products = productsQuery.data ?? [];
   const orders = ordersQuery.data ?? [];
@@ -112,7 +113,7 @@ export default function Admin() {
       try {
         imageUrl = originalData;
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Image upload failed.");
+        toast.error(getErrorMessage(error, "Image upload failed."));
         return;
       }
     }
@@ -144,7 +145,7 @@ export default function Admin() {
 
     <main className="admin-main">
       <div className="admin-topline"><Link href="/" className="admin-back"><ArrowLeft size={15} /> View storefront</Link><div><span className="online-dot" /> Your seller desk</div></div>
-      {!auth.isAuthenticated && !auth.loading ? <section className="admin-gate"><div className="gate-icon"><ShieldCheck size={28} /></div><span className="eyebrow">OWNER ACCESS</span><h1>Your shop, your way.</h1><p>Sign in with the shop owner email and password to add products and manage customer orders.</p><form className="admin-login-form" onSubmit={onLogin}><label>Email address<input type="email" required maxLength={320} autoComplete="username" value={loginEmail} onChange={event => setLoginEmail(event.target.value)} placeholder="you@example.com" /></label><label>Password<input type="password" required maxLength={128} autoComplete="current-password" value={loginPassword} onChange={event => setLoginPassword(event.target.value)} placeholder="Enter your password" /></label>{loginAdmin.error && <p className="login-error" role="alert">{loginAdmin.error.message}</p>}<button className="button button-primary full" type="submit" disabled={loginAdmin.isPending}><LogIn size={17} /> {loginAdmin.isPending ? "Signing in…" : "Sign in to manage your shop"}</button></form><Link href="/" className="gate-home">Back to the storefront</Link></section> : null}
+      {!auth.isAuthenticated && !auth.loading ? <section className="admin-gate"><div className="gate-icon"><ShieldCheck size={28} /></div><span className="eyebrow">OWNER ACCESS</span><h1>Your shop, your way.</h1><p>Sign in with the shop owner email and password to add products and manage customer orders.</p><form className="admin-login-form" onSubmit={onLogin}><label>Email address<input type="email" required maxLength={320} autoComplete="username" value={loginEmail} onChange={event => setLoginEmail(event.target.value)} placeholder="you@example.com" /></label><label>Password<input type="password" required maxLength={128} autoComplete="current-password" value={loginPassword} onChange={event => setLoginPassword(event.target.value)} placeholder="Enter your password" /></label>{loginAdmin.error && <p className="login-error" role="alert">{getErrorMessage(loginAdmin.error)}</p>}<button className="button button-primary full" type="submit" disabled={loginAdmin.isPending}><LogIn size={17} /> {loginAdmin.isPending ? "Signing in…" : "Sign in to manage your shop"}</button></form><Link href="/" className="gate-home">Back to the storefront</Link></section> : null}
       {auth.loading && <div className="admin-loading"><div className="spinner" /> Checking owner access…</div>}
       {auth.isAuthenticated && denied && <section className="admin-gate"><div className="gate-icon"><ShieldCheck size={28} /></div><span className="eyebrow">OWNER ACCESS</span><h1>Only the shop owner can open this desk.</h1><p>This account isn’t linked to the store owner email. If you have just configured the owner address, sign out and back in with that same account.</p><button className="button button-outline" onClick={() => void auth.logout()}><LogOut size={16} /> Sign out and switch account</button><Link href="/" className="gate-home">Back to the storefront</Link></section>}
       {auth.isAuthenticated && dataError && <section className="admin-gate"><div className="gate-icon"><Package size={28} /></div><span className="eyebrow">STORE DATA</span><h1>Store data could not load.</h1><p>{dataError.message || "Check the MongoDB connection and try again."}</p><button className="button button-primary" onClick={() => { void productsQuery.refetch(); void ordersQuery.refetch(); }}>Try again</button></section>}

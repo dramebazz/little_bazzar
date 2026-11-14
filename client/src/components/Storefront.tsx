@@ -1,13 +1,20 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "wouter";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { useCart } from "@/contexts/CartContext";
 import { formatINR } from "@/lib/shop";
+import { getErrorMessage } from "@/lib/errorMessage";
 
 export function StoreHeader() {
   const { count } = useCart();
   const [cartOpen, setCartOpen] = useState(false);
+  const [checkoutRequested, setCheckoutRequested] = useState(false);
+  useEffect(() => {
+    const openCheckout = () => { setCheckoutRequested(true); setCartOpen(true); };
+    window.addEventListener("open-cart-checkout", openCheckout);
+    return () => window.removeEventListener("open-cart-checkout", openCheckout);
+  }, []);
   return <>
     <div className="announcement">Little finds, lovely prices <span>•</span> Thoughtfully picked for you</div>
     <header className="store-header">
@@ -28,17 +35,21 @@ export function StoreHeader() {
         </div>
       </div>
     </header>
-    {cartOpen && <CartDrawer onClose={() => setCartOpen(false)} />}
+    {cartOpen && <CartDrawer startCheckout={checkoutRequested} onClose={() => { setCartOpen(false); setCheckoutRequested(false); }} />}
   </>;
+}
+
+export function AddToCartPrompt({ onClose }: { onClose: () => void }) {
+  return <div className="add-cart-prompt"><div><strong>Added to your bag</strong><small>Ready when you are.</small></div><button className="button button-primary" onClick={() => window.dispatchEvent(new Event("open-cart-checkout"))}>Continue to checkout</button><button className="prompt-close" onClick={onClose} aria-label="Close">×</button></div>;
 }
 
 export function StoreFooter() {
   return <footer className="store-footer"><div className="footer-brand"><span className="brand-mark small"><i /><i /><i /><i /></span> little bazaar</div><p>Good finds, shared with care.</p><span>Cash on delivery · Your order details stay private</span></footer>;
 }
 
-function CartDrawer({ onClose }: { onClose: () => void }) {
+function CartDrawer({ onClose, startCheckout }: { onClose: () => void; startCheckout?: boolean }) {
   const cart = useCart();
-  const [checkout, setCheckout] = useState(false);
+  const [checkout, setCheckout] = useState(Boolean(startCheckout));
   const [completeOrder, setCompleteOrder] = useState<string | null>(null);
   const utils = trpc.useUtils();
   const placeOrder = trpc.shop.placeOrder.useMutation({
@@ -48,7 +59,7 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
       setCheckout(false);
       void utils.shop.catalog.invalidate();
     },
-    onError: error => toast.error(error.message || "We couldn't place that order. Please check your details and try again."),
+    onError: error => toast.error(getErrorMessage(error, "We couldn't place that order. Please check your details and try again.")),
   });
 
   function submit(event: FormEvent<HTMLFormElement>) {

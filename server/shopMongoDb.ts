@@ -4,7 +4,7 @@ import { TRPCError } from "@trpc/server";
 import type { CheckoutInput, OrderStatus, ProductInput } from "./shopTypes.js";
 
 export type ProductRecord = {
-  id: number; name: string; description: string; category: string; imageUrl: string;
+  id: number; publicId?: string; name: string; description: string; category: string; imageUrl: string;
   price: number; stock: number; options: string[]; isActive: boolean; createdAt: Date; updatedAt: Date;
 };
 export type OrderItemRecord = {
@@ -29,6 +29,11 @@ export type CustomerAccountDoc = {
 export type ShopOrderStatus = OrderStatus;
 type ProductDoc = Omit<ProductRecord, "options"> & { options: string[] };
 type OrderDoc = OrderRecord & { items: OrderItemRecord[] };
+const PUBLIC_ID_ALPHABET = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+function createPublicId() {
+  const bytes = randomBytes(12);
+  return Array.from(bytes, byte => PUBLIC_ID_ALPHABET[byte % PUBLIC_ID_ALPHABET.length]).join("");
+}
 
 let clientPromise: Promise<MongoClient> | undefined;
 let indexesPromise: Promise<void> | undefined;
@@ -50,6 +55,7 @@ async function collections() {
       db.collection("shop_orders").createIndex({ id: 1 }, { unique: true }),
       db.collection("shop_orders").createIndex({ orderNumber: 1 }, { unique: true }),
       db.collection("shop_products").createIndex({ isActive: 1, createdAt: -1 }),
+      db.collection("shop_products").createIndex({ publicId: 1 }, { unique: true, sparse: true }),
       db.collection("shop_orders").createIndex({ createdAt: -1 }),
       db.collection("shop_order_items").createIndex({ orderId: 1 }),
       db.collection("customer_accounts").createIndex({ email: 1 }, { unique: true }),
@@ -84,17 +90,28 @@ export async function listCatalog(search?: string, category?: string) {
   if (category && category !== "All") filter.category = category;
   if (search) filter.name = { $regex: search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), $options: "i" };
   const rows = await products.find(filter).sort({ createdAt: -1 }).toArray();
+  for (const row of rows) if (!row.publicId) {
+    const publicId = createPublicId();
+    await products.updateOne({ id: row.id, publicId: { $exists: false } }, { $set: { publicId } });
+    row.publicId = publicId;
+  }
   return rows.map(productShape);
 }
-export async function findProductById(id: number) {
+export async function findProductByPublicId(publicId: string) {
   const { products } = await collections();
-  const product = await products.findOne({ id, isActive: true });
+  const product = await products.findOne({ publicId, isActive: true });
   return product ? productShape(product) : null;
 }
-export const findProduct = findProductById;
+export const findProduct = findProductByPublicId;
 export async function listAdminProducts() {
   const { products } = await collections();
-  return (await products.find({}).sort({ updatedAt: -1 }).toArray()).map(productShape);
+  const rows = await products.find({}).sort({ updatedAt: -1 }).toArray();
+  for (const row of rows) if (!row.publicId) {
+    const publicId = createPublicId();
+    await products.updateOne({ id: row.id, publicId: { $exists: false } }, { $set: { publicId } });
+    row.publicId = publicId;
+  }
+  return rows.map(productShape);
 }
 export async function findCustomer(email: string) {
   const { customers } = await collections();
@@ -113,7 +130,8 @@ export async function updateCustomerPassword(email: string, passwordHash: string
 }
 export async function listCustomerOrders(email: string) {
   const { orders, items } = await collections();
-  const allOrders = await orders.find({ email: email.trim().toLowerCase() }).sort({ createdAt: -1 }).toArray();
+  const escapedEmail = email.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const allOrders = await orders.find({ email: { $regex: `^${escapedEmail}$`, $options: "i" } }).sort({ createdAt: -1 }).toArray();
   if (allOrders.length === 0) return [];
   const allItems = await items.find({ orderId: { $in: allOrders.map(order => order.id) } }).toArray();
   const grouped = new Map<number, OrderItemRecord[]>();
@@ -130,7 +148,7 @@ export async function saveProduct(input: ProductInput & { id?: number }) {
     return productShape(result);
   }
   const id = await nextId(counters, "product");
-  const inserted: ProductDoc = { id, ...values, isActive: true, createdAt: now };
+  const inserted: ProductDoc = { id, publicId: createPublicId(), ...values, isActive: true, createdAt: now };
   await products.insertOne(inserted);
   return productShape(inserted);
 }

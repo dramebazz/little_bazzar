@@ -11,11 +11,11 @@ export async function listCatalog(search?: string, category?: string) {
   return (await adapter()).listCatalog(search, category);
 }
 
-export async function findProductById(id: number) {
-  return (await adapter()).findProduct(id);
+export async function findProductByPublicId(publicId: string) {
+  return (await adapter()).findProduct(publicId);
 }
 
-export const findProduct = findProductById;
+export const findProduct = findProductByPublicId;
 
 export async function listAdminProducts() {
   return (await adapter()).listAdminProducts();

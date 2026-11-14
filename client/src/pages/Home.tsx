@@ -5,13 +5,14 @@ import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { useCart } from "@/contexts/CartContext";
 import { formatINR } from "@/lib/shop";
-import { StoreFooter, StoreHeader } from "@/components/Storefront";
+import { AddToCartPrompt, StoreFooter, StoreHeader } from "@/components/Storefront";
 
 export default function Home() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const products = trpc.shop.catalog.useQuery({ search: search || undefined, category: category === "All" ? undefined : category });
   const { add } = useCart();
+  const [added, setAdded] = useState(false);
   const categories = useMemo(() => ["All", ...new Set((products.data ?? []).map(item => item.category))], [products.data]);
 
   return <div className="shop-page">
@@ -48,11 +49,12 @@ export default function Home() {
           <label className="search-box"><Search size={17} /><input value={search} onChange={event => setSearch(event.target.value)} placeholder="Find something lovely" aria-label="Search products" /><kbd>⌕</kbd></label>
         </div>
         {products.isLoading ? <div className="product-grid">{Array.from({ length: 4 }, (_, index) => <div className="product-skeleton" key={index} />)}</div> : products.isError ? <div className="catalog-empty"><PackageOpen size={28} /><h3>We couldn't load the collection</h3><p>Please try again in a moment.</p><button className="button button-outline" onClick={() => void products.refetch()}>Try again</button></div> : products.data?.length ? <div className="product-grid">{products.data.map((product, index) => <article className="product-card" key={product.id}>
-          <Link href={`/product/${product.id}`} className="product-image-link">
+          <Link href={`/product/${product.publicId}`} className="product-image-link">
             <div className={`product-image-frame tone-${index % 4}`}><img src={product.imageUrl} alt={product.name} loading="lazy" /><span className="product-image-heart">♡</span>{product.stock < 1 && <span className="sold-out">Sold out</span>}</div>
           </Link>
-          <div className="product-card-body"><div className="product-category">{product.category}</div><Link href={`/product/${product.id}`} className="product-title">{product.name}</Link><div className="product-card-bottom"><strong>{formatINR(product.price)}</strong><button className="add-round" disabled={product.stock < 1} onClick={() => { if (product.options.length) { window.location.href = `/product/${product.id}`; return; } add(product); toast.success("Added to your bag"); }} aria-label={`Add ${product.name} to bag`}>{product.options.length ? "↗" : "+"}</button></div><small className="stock-hint">{product.stock > 0 ? `${product.stock} available` : "Currently unavailable"}</small></div>
+          <div className="product-card-body"><div className="product-category">{product.category}</div><Link href={`/product/${product.publicId}`} className="product-title">{product.name}</Link><div className="product-card-bottom"><strong>{formatINR(product.price)}</strong><button className="add-round" disabled={product.stock < 1} onClick={() => { if (product.options.length) { window.location.href = `/product/${product.publicId}`; return; } add(product); setAdded(true); }} aria-label={`Add ${product.name} to bag`}>{product.options.length ? "↗" : "+"}</button></div><small className="stock-hint">{product.stock > 0 ? `${product.stock} available` : "Currently unavailable"}</small></div>
         </article>)}</div> : <div className="catalog-empty"><div className="empty-parcel"><span>✳</span><PackageOpen size={33} /></div><span className="eyebrow">A LITTLE SPACE FOR SOMETHING NEW</span><h3>{search ? "No finds just yet" : category !== "All" ? `Nothing in ${category} right now` : "We’re getting the shelves ready"}</h3><p>{search ? "Try another search and see what turns up." : "Our shop is being stocked with lovely finds. Check back soon."}</p>{search && <button className="text-button" onClick={() => setSearch("")}>Clear search</button>}</div>}
+        {added && <AddToCartPrompt onClose={() => setAdded(false)} />}
       </section>
 
       <section className="seller-note"><div className="note-icon">✿</div><div><span className="eyebrow">A NOTE FROM THE SELLER</span><h2>Small shop.<br /><em>Thoughtful picks.</em></h2><p>Every item here is chosen with a little extra care. Thanks for supporting a small business and making room for something lovely.</p></div><div className="note-doodle">♡<span>made with<br />a little love</span></div></section>

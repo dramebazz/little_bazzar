@@ -46,7 +46,7 @@ function parseOptions(value: string): string[] {
 }
 
 export function shapeProduct(product: typeof products.$inferSelect) {
-  return { ...product, options: parseOptions(product.options) };
+  return { ...product, publicId: undefined, options: parseOptions(product.options) };
 }
 
 export async function listCatalog(search?: string, category?: string) {
@@ -58,10 +58,14 @@ export async function listCatalog(search?: string, category?: string) {
   return rows.map(shapeProduct);
 }
 
-export async function findProduct(id: number) {
+export async function findProduct(_publicId: string) {
+  return null;
+  /*
+  const id = Number(_publicId);
   const db = await database();
   const [product] = await db.select().from(products).where(and(eq(products.id, id), eq(products.isActive, true))).limit(1);
   return product ? shapeProduct(product) : null;
+  */
 }
 
 export async function listAdminProducts() {

@@ -172,6 +172,9 @@ img { display: block; max-width: 100%; }
 .account-form input { width: 100%; min-height: 42px; padding: 10px 12px; border: 1px solid #e9dfd8; border-radius: 9px; background: #fff; color: var(--ink); font-size: 12px; }
 .account-switch { display: flex; justify-content: space-between; gap: 12px; margin-top: 18px; }
 .account-switch button { border: 0; background: transparent; color: var(--rose-deep); font-size: 10px; font-weight: 900; }
+.account-switch-back { display: block; margin-top: 14px; }
+.account-switch-back button { width: 100%; min-height: 44px; border: 1px solid #eaded8; border-radius: 10px; background: #fff; color: var(--ink); font-size: 12px; }
+.account-switch-back button:hover { border-color: var(--rose); color: var(--rose-deep); }
 .account-dashboard { padding: 28px; }
 .account-heading { display: flex; align-items: start; justify-content: space-between; gap: 16px; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
 .account-heading p { margin: 0; color: #9b8e88; font-size: 10px; }
@@ -192,12 +195,22 @@ img { display: block; max-width: 100%; }
 .account-empty h3 { margin: 0 0 5px; font-size: 15px; }
 .account-empty p { margin: 0 0 16px; color: #9b8e88; font-size: 10px; }
 .account-question { margin: 0 !important; padding: 10px; border-radius: 8px; background: #fff2ed; color: #7e716d !important; font-size: 10px !important; }
+.add-cart-prompt { position: fixed; z-index: 55; left: 50%; bottom: 22px; transform: translateX(-50%); width: min(520px, calc(100% - 32px)); display: flex; align-items: center; gap: 14px; padding: 13px 15px; border: 1px solid #eaded8; border-radius: 13px; background: #fffdf9; box-shadow: 0 14px 35px #49372b26; animation: prompt-in .2s ease; }
+.add-cart-prompt > div { min-width: 0; flex: 1; }
+.add-cart-prompt strong, .add-cart-prompt small { display: block; }
+.add-cart-prompt strong { color: #493d38; font-size: 11px; }
+.add-cart-prompt small { margin-top: 3px; color: #9b8e88; font-size: 9px; }
+.add-cart-prompt .button { min-height: 36px; padding-inline: 13px; font-size: 10px; white-space: nowrap; }
+.prompt-close { width: 25px; height: 25px; border: 0; background: transparent; color: #a1948e; font-size: 19px; line-height: 1; }
+@keyframes prompt-in { from { opacity: 0; transform: translate(-50%, 12px); } to { opacity: 1; transform: translate(-50%, 0); } }
 @media (max-width: 720px) {
   .account-top { padding: 20px 16px; }
   .account-page main { margin-top: 28px; }
   .account-panel, .account-dashboard { padding: 22px 18px; }
   .account-heading { flex-direction: column; }
   .account-heading .button { width: 100%; }
+  .add-cart-prompt { bottom: 14px; gap: 8px; padding: 11px; }
+  .add-cart-prompt .button { padding-inline: 9px; font-size: 9px; }
 }
 .admin-page:not(.admin-page-gate) > .admin-sidebar { display: flex; }
 .admin-page-gate .admin-main { max-width: 560px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 32px 24px; margin: 0 auto; }

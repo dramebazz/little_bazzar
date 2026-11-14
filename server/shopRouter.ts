@@ -19,8 +19,8 @@ const statusInput = z.enum(["new", "confirmed", "packed", "shipped", "delivered"
 export const shopRouter = router({
   catalog: publicProcedure.input(z.object({ search: z.string().trim().max(120).optional(), category: z.string().trim().max(120).optional() }).optional())
     .query(({ input }) => shopDb.listCatalog(input?.search || undefined, input?.category || undefined)),
-  product: publicProcedure.input(z.object({ id: z.number().int().positive() }))
-    .query(({ input }) => shopDb.findProduct(input.id)),
+  product: publicProcedure.input(z.object({ publicId: z.string().regex(/^[A-Za-z0-9]{12}$/) }))
+    .query(({ input }) => shopDb.findProduct(input.publicId)),
   placeOrder: publicProcedure.input(z.object({
     customerName: z.string().trim().min(2).max(180),
     phone: z.string().trim().min(7).max(32).regex(/^[+\d() .-]+$/, "Enter a valid phone number."),
