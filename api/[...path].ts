@@ -1,4 +1,8 @@
+import type { Request, Response } from "express";
 import { createApiApp } from "../server/_core/app";
 
 const app = createApiApp();
-export default app;
+
+export default function handler(req: Request, res: Response) {
+  app(req, res);
+}
