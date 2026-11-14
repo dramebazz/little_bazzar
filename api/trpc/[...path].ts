@@ -1,5 +1,4 @@
 import express from "express";
-import type { Request, Response } from "express";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { appRouter } from "../../server/routers.js";
 import { createContext } from "../../server/_core/context.js";
@@ -15,6 +14,6 @@ app.use(
   }),
 );
 
-export default function handler(req: Request, res: Response) {
-  app(req, res);
+export default function handler(req: unknown, res: unknown) {
+  app(req as never, res as never);
 }

@@ -1,6 +1,7 @@
-import type { Request, Response } from "express";
+import type { HttpResponse } from "../server/_core/httpTypes.js";
 
-export default function config(_req: Request, res: Response) {
+export default function config(_req: unknown, rawResponse: unknown) {
+  const res = rawResponse as HttpResponse;
   const runtimeConfig = {
     publicApiUrl: process.env.PUBLIC_API_URL ?? "",
     publicApiKey: process.env.PUBLIC_API_KEY ?? "",

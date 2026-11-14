@@ -1,7 +1,7 @@
 import { parse as parseCookieHeader } from "cookie";
 import { timingSafeEqual } from "node:crypto";
 import { scrypt as scryptCallback } from "node:crypto";
-import type { Request } from "express";
+import type { HttpRequest } from "./httpTypes.js";
 import { SignJWT, jwtVerify } from "jose";
 import type { User } from "../../drizzle/schema.js";
 import { COOKIE_NAME, ADMIN_SESSION_MS } from "../../shared/const.js";
@@ -103,8 +103,9 @@ export async function verifyAdminSessionToken(token: string | undefined | null) 
   }
 }
 
-export async function authenticateAdminRequest(req: Request): Promise<User | null> {
-  const cookies = parseCookieHeader(req.headers.cookie ?? "");
+export async function authenticateAdminRequest(req: HttpRequest): Promise<User | null> {
+  const cookieHeader = req.headers.cookie;
+  const cookies = parseCookieHeader(typeof cookieHeader === "string" ? cookieHeader : "");
   const session = await verifyAdminSessionToken(cookies[COOKIE_NAME]);
   if (!session) return null;
   const now = new Date();
