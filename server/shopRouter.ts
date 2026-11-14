@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { adminProcedure, publicProcedure, router } from "./_core/trpc";
-import * as shopDb from "./shopDb";
+import { adminProcedure, publicProcedure, router } from "./_core/trpc.js";
+import * as shopDb from "./shopDb.js";
 
 const productInput = z.object({
   id: z.number().int().positive().optional(),

@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { MongoClient, type Collection, type ClientSession, type Document } from "mongodb";
 import { TRPCError } from "@trpc/server";
-import type { CheckoutInput, OrderStatus, ProductInput } from "./shopTypes";
+import type { CheckoutInput, OrderStatus, ProductInput } from "./shopTypes.js";
 
 export type ProductRecord = {
   id: number; name: string; description: string; category: string; imageUrl: string;

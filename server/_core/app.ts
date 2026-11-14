@@ -1,10 +1,10 @@
 import "dotenv/config";
 import express from "express";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
-import { registerStorageProxy } from "./storageProxy";
-import { storeRuntimeScript } from "./publicConfig";
-import { appRouter } from "../routers";
-import { createContext } from "./context";
+import { registerStorageProxy } from "./storageProxy.js";
+import { storeRuntimeScript } from "./publicConfig.js";
+import { appRouter } from "../routers.js";
+import { createContext } from "./context.js";
 
 export function createApiApp() {
   const app = express();

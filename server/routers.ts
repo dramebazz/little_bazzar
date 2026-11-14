@@ -1,11 +1,11 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { COOKIE_NAME, ADMIN_SESSION_MS } from "../shared/const";
-import { getSessionCookieOptions } from "./_core/cookies";
-import { createAdminSessionToken, isAdminLoginConfigured, verifyAdminCredentials } from "./_core/adminAuth";
-import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router } from "./_core/trpc";
-import { shopRouter } from "./shopRouter";
+import { COOKIE_NAME, ADMIN_SESSION_MS } from "../shared/const.js";
+import { getSessionCookieOptions } from "./_core/cookies.js";
+import { createAdminSessionToken, isAdminLoginConfigured, verifyAdminCredentials } from "./_core/adminAuth.js";
+import { systemRouter } from "./_core/systemRouter.js";
+import { publicProcedure, router } from "./_core/trpc.js";
+import { shopRouter } from "./shopRouter.js";
 
 export const appRouter = router({
   system: systemRouter,

@@ -1,10 +1,10 @@
-import * as mongo from "./shopMongoDb";
-import type { CheckoutInput, ProductInput } from "./shopTypes";
+import * as mongo from "./shopMongoDb.js";
+import type { CheckoutInput, ProductInput } from "./shopTypes.js";
 
-export type { CheckoutInput, ProductInput } from "./shopTypes";
+export type { CheckoutInput, ProductInput } from "./shopTypes.js";
 
 async function adapter() {
-  return process.env.MONGODB_URI ? mongo : import("./shopMysqlDb");
+  return process.env.MONGODB_URI ? mongo : import("./shopMysqlDb.js");
 }
 
 export async function listCatalog(search?: string, category?: string) {
