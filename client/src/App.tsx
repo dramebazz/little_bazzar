@@ -8,12 +8,14 @@ import { CartProvider } from "./contexts/CartContext";
 import Home from "./pages/Home";
 import ProductDetail from "./pages/ProductDetail";
 import Admin from "./pages/Admin";
+import Account from "./pages/Account";
 
 function Router() {
   return <Switch>
     <Route path="/" component={Home} />
     <Route path="/product/:id" component={ProductDetail} />
     <Route path="/admin" component={Admin} />
+    <Route path="/account" component={Account} />
     <Route path="/404" component={NotFound} />
     <Route component={NotFound} />
   </Switch>;

@@ -16,6 +16,16 @@ export type OrderRecord = {
   address: string; city: string; pincode: string; notes: string | null; status: OrderStatus;
   total: number; createdAt: Date; updatedAt: Date;
 };
+export type CustomerAccountDoc = {
+  _id?: unknown;
+  email: string;
+  name: string;
+  passwordHash: string;
+  recoveryQuestion: string;
+  recoveryAnswerHash: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
 export type ShopOrderStatus = OrderStatus;
 type ProductDoc = Omit<ProductRecord, "options"> & { options: string[] };
 type OrderDoc = OrderRecord & { items: OrderItemRecord[] };
@@ -42,6 +52,7 @@ async function collections() {
       db.collection("shop_products").createIndex({ isActive: 1, createdAt: -1 }),
       db.collection("shop_orders").createIndex({ createdAt: -1 }),
       db.collection("shop_order_items").createIndex({ orderId: 1 }),
+      db.collection("customer_accounts").createIndex({ email: 1 }, { unique: true }),
     ]).then(() => undefined).catch(error => { indexesPromise = undefined; throw error; });
   }
   await indexesPromise;
@@ -51,6 +62,7 @@ async function collections() {
     orders: db.collection<OrderDoc>("shop_orders"),
     items: db.collection<OrderItemRecord & Document>("shop_order_items"),
     counters: db.collection<{ _id: string; value: number } & Document>("shop_counters"),
+    customers: db.collection<CustomerAccountDoc & Document>("customer_accounts"),
   };
 }
 async function nextId(counters: Collection<{ _id: string; value: number } & Document>, key: string, session?: ClientSession) {
@@ -83,6 +95,30 @@ export const findProduct = findProductById;
 export async function listAdminProducts() {
   const { products } = await collections();
   return (await products.find({}).sort({ updatedAt: -1 }).toArray()).map(productShape);
+}
+export async function findCustomer(email: string) {
+  const { customers } = await collections();
+  return customers.findOne({ email: email.trim().toLowerCase() });
+}
+export async function createCustomer(input: Omit<CustomerAccountDoc, "_id" | "createdAt" | "updatedAt">) {
+  const { customers } = await collections();
+  const now = new Date();
+  const account = { ...input, createdAt: now, updatedAt: now };
+  await customers.insertOne(account);
+  return account;
+}
+export async function updateCustomerPassword(email: string, passwordHash: string) {
+  const { customers } = await collections();
+  await customers.updateOne({ email: email.trim().toLowerCase() }, { $set: { passwordHash, updatedAt: new Date() } });
+}
+export async function listCustomerOrders(email: string) {
+  const { orders, items } = await collections();
+  const allOrders = await orders.find({ email: email.trim().toLowerCase() }).sort({ createdAt: -1 }).toArray();
+  if (allOrders.length === 0) return [];
+  const allItems = await items.find({ orderId: { $in: allOrders.map(order => order.id) } }).toArray();
+  const grouped = new Map<number, OrderItemRecord[]>();
+  for (const item of allItems) grouped.set(item.orderId, [...(grouped.get(item.orderId) ?? []), item]);
+  return allOrders.map(({ _id: _orderId, items: _embeddedItems, ...order }) => ({ ...order, items: grouped.get(order.id) ?? [] }));
 }
 export async function saveProduct(input: ProductInput & { id?: number }) {
   const { products, counters } = await collections();
@@ -142,7 +178,7 @@ export async function placeOrder(input: CheckoutInput) {
       const orderId = await nextId(counters, "order", session);
       const orderNumber = `LB-${Date.now().toString(36).toUpperCase()}-${randomBytes(3).toString("hex").toUpperCase()}`;
       const total = snapshots.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
-      const order: OrderDoc = { id: orderId, orderNumber, customerName: input.customerName.trim(), phone: input.phone.trim(), email: input.email?.trim() || null, address: input.address.trim(), city: input.city.trim(), pincode: input.pincode.trim(), notes: input.notes?.trim() || null, status: "new", total, createdAt: now, updatedAt: now, items: [] };
+      const order: OrderDoc = { id: orderId, orderNumber, customerName: input.customerName.trim(), phone: input.phone.trim(), email: input.email?.trim().toLowerCase() || null, address: input.address.trim(), city: input.city.trim(), pincode: input.pincode.trim(), notes: input.notes?.trim() || null, status: "new", total, createdAt: now, updatedAt: now, items: [] };
       await orders.insertOne(order, { session });
       const itemRows = [];
       for (const line of snapshots) itemRows.push({ id: await nextId(counters, "orderItem", session), orderId, ...line });

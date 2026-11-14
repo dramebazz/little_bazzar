@@ -20,7 +20,7 @@ export function StoreHeader() {
           <Link href="/#shop">Shop all</Link>
           <Link href="/#categories">Categories</Link>
         </nav>
-        <div className="header-actions">
+        <div className="header-actions"><Link href="/account" className="account-link">Account</Link>
           <button className="bag-button" onClick={() => setCartOpen(true)} aria-label={`Open bag, ${count} items`}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 13H6L5 8Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></svg>
             <span>Bag</span><b>{count}</b>
@@ -72,7 +72,7 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
       {completeOrder ? <div className="order-success"><div className="success-mark">✓</div><h3>Thank you for your order!</h3><p>Your order number is <strong>{completeOrder}</strong>. The seller will confirm it soon.</p><p className="muted">Payment is due on delivery.</p><button className="button button-primary full" onClick={onClose}>Continue shopping</button></div> : cart.lines.length === 0 ? <div className="empty-bag"><div className="empty-icon">♡</div><h3>Your bag is taking a little break</h3><p>When you find something you love, it’ll be right here.</p><button className="button button-primary" onClick={onClose}>Explore the shop</button></div> : checkout ? <form className="checkout-form" onSubmit={submit}>
         <div className="checkout-summary"><span>{cart.count} {cart.count === 1 ? "item" : "items"}</span><strong>{formatINR(cart.total)}</strong></div>
         <label>Full name<input name="customerName" required minLength={2} autoComplete="name" placeholder="Your name" /></label>
-        <div className="form-row"><label>Phone number<input name="phone" required minLength={7} autoComplete="tel" placeholder="10-digit number" /></label><label>Email <small>(optional)</small><input name="email" type="email" autoComplete="email" placeholder="you@example.com" /></label></div>
+        <div className="form-row"><label>Phone number<input name="phone" required minLength={7} autoComplete="tel" placeholder="10-digit number" /></label><label>Email<input name="email" type="email" required autoComplete="email" placeholder="you@example.com" /></label></div>
         <label>Delivery address<textarea name="address" required minLength={5} autoComplete="street-address" rows={3} placeholder="House, street, area" /></label>
         <div className="form-row"><label>City<input name="city" required autoComplete="address-level2" placeholder="City" /></label><label>PIN code<input name="pincode" required minLength={4} autoComplete="postal-code" placeholder="PIN code" /></label></div>
         <label>Note for the seller <small>(optional)</small><textarea name="notes" rows={2} placeholder="Anything we should know?" /></label>

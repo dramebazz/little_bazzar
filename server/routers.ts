@@ -6,10 +6,12 @@ import { createAdminSessionToken, isAdminLoginConfigured, verifyAdminCredentials
 import { systemRouter } from "./_core/systemRouter.js";
 import { publicProcedure, router } from "./_core/trpc.js";
 import { shopRouter } from "./shopRouter.js";
+import { customerRouter } from "./customerRouter.js";
 
 export const appRouter = router({
   system: systemRouter,
   shop: shopRouter,
+  customer: customerRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     loginAdmin: publicProcedure

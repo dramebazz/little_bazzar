@@ -37,6 +37,24 @@ export async function placeOrder(input: CheckoutInput) {
   return (await adapter()).placeOrder(input);
 }
 
+export async function findCustomer(email: string) {
+  if (process.env.MONGODB_URI) return mongo.findCustomer(email);
+  return null;
+}
+
+export async function createCustomer(input: Parameters<typeof mongo.createCustomer>[0]) {
+  return mongo.createCustomer(input);
+}
+
+export async function updateCustomerPassword(email: string, passwordHash: string) {
+  return mongo.updateCustomerPassword(email, passwordHash);
+}
+
+export async function listCustomerOrders(email: string) {
+  if (process.env.MONGODB_URI) return mongo.listCustomerOrders(email);
+  return [];
+}
+
 export async function updateOrderStatus(id: number, status: Parameters<typeof mongo.updateOrderStatus>[1]) {
   return (await adapter()).updateOrderStatus(id, status);
 }
