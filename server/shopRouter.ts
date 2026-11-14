@@ -2,13 +2,14 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { adminProcedure, publicProcedure, router } from "./_core/trpc.js";
 import * as shopDb from "./shopDb.js";
+import { storagePut } from "./storage.js";
 
 const productInput = z.object({
   id: z.number().int().positive().optional(),
   name: z.string().trim().min(2).max(255),
   description: z.string().trim().min(5).max(5000),
   category: z.string().trim().min(2).max(120),
-  imageUrl: z.string().trim().url().max(2048).refine(value => /^https?:\/\//i.test(value), "Use an http or https image URL."),
+  imageUrl: z.string().trim().max(2048).refine(value => /^https?:\/\//i.test(value) || value.startsWith("/api/assets/"), "Upload an image or use an http/https image URL."),
   price: z.number().int().positive().max(10_000_000),
   stock: z.number().int().min(0).max(1_000_000),
   options: z.array(z.string().trim().min(1).max(255)).max(50),
@@ -32,6 +33,19 @@ export const shopRouter = router({
     items: z.array(z.object({ productId: z.number().int().positive(), quantity: z.number().int().min(1).max(99), option: z.string().max(255).optional() })).min(1).max(50),
   })).mutation(({ input }) => shopDb.placeOrder(input)),
   admin: router({
+    uploadImage: adminProcedure.input(z.object({
+      fileName: z.string().trim().min(1).max(255),
+      contentType: z.enum(["image/jpeg", "image/png", "image/webp", "image/gif"]),
+      data: z.string().regex(/^data:image\/(?:jpeg|png|webp|gif);base64,[A-Za-z0-9+/]+={0,2}$/, "Invalid image data."),
+    })).mutation(async ({ input }) => {
+      const base64 = input.data.slice(input.data.indexOf(",") + 1);
+      const bytes = Buffer.from(base64, "base64");
+      if (bytes.length > 5 * 1024 * 1024) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Image must be 5 MB or smaller." });
+      }
+      const extension = input.contentType.split("/")[1].replace("jpeg", "jpg");
+      return storagePut(`products/${Date.now()}-${input.fileName.replace(/[^a-z0-9.-]/gi, "-")}.${extension}`, bytes, input.contentType);
+    }),
     products: adminProcedure.query(() => shopDb.listAdminProducts()),
     saveProduct: adminProcedure.input(productInput).mutation(({ input }) => shopDb.saveProduct(input)),
     setProductVisibility: adminProcedure.input(z.object({ id: z.number().int().positive(), isActive: z.boolean() }))

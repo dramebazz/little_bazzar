@@ -26,6 +26,8 @@ Set these four variables in Vercel **Production** (and in **Preview** if you wan
 | `STORE_ADMIN_EMAIL` | The one email address allowed to manage the shop. |
 | `STORE_ADMIN_PASSWORD_HASH` | Run `pnpm admin:hash-password` in a terminal, then paste the printed hash—not the original password. |
 
+Product image uploads also require the server-side storage service variables `SERVICE_API_URL` and `SERVICE_API_KEY`. The admin product form accepts JPG, PNG, WEBP, and GIF files up to 5 MB; uploaded images are stored through that service and saved as managed `/api/assets/...` paths.
+
 The optional map and auxiliary-service variables are documented in `.env.example`. Email/password sign-in does not require third-party identity credentials. Never put secrets in source files or prefix them with `VITE_`.
 
 ## Deploy

@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { TRPCClientError } from "@trpc/client";
 import type { inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "../../../server/routers";
-import { Archive, ArrowLeft, ClipboardList, LogIn, LogOut, Package, Plus, ShieldCheck, Store, X } from "lucide-react";
+import { Archive, ArrowLeft, ClipboardList, ImagePlus, LogIn, LogOut, Package, Plus, ShieldCheck, Store, X } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -34,6 +34,7 @@ export default function Admin() {
     onSuccess: async () => { toast.success(editingId ? "Product updated" : "Product added to your shop"); setEditorOpen(false); await Promise.all([utils.shop.admin.products.invalidate(), utils.shop.catalog.invalidate()]); },
     onError: error => toast.error(error.message),
   });
+  const uploadImage = trpc.shop.admin.uploadImage.useMutation();
   const setProductVisibility = trpc.shop.admin.setProductVisibility.useMutation({
     onSuccess: async (_result, variables) => { toast.success(variables.isActive ? "Product restored to your shop" : "Product hidden from your shop"); await Promise.all([utils.shop.admin.products.invalidate(), utils.shop.catalog.invalidate()]); },
     onError: error => toast.error(error.message),
@@ -59,16 +60,48 @@ export default function Admin() {
     loginAdmin.mutate({ email: loginEmail, password: loginPassword });
   }
 
-  function onSave(event: FormEvent<HTMLFormElement>) {
+  async function onSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    const image = form.get("image");
+    let imageUrl = String(form.get("imageUrl") ?? "").trim();
+    if (image instanceof File && image.size > 0) {
+      if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(image.type)) {
+        toast.error("Choose a JPG, PNG, WEBP or GIF image.");
+        return;
+      }
+      if (image.size > 5 * 1024 * 1024) {
+        toast.error("Image must be 5 MB or smaller.");
+        return;
+      }
+      const data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(new Error("Could not read the image."));
+        reader.readAsDataURL(image);
+      }).catch(() => "");
+      if (!data) {
+        toast.error("Could not read the image. Please try again.");
+        return;
+      }
+      try {
+        imageUrl = (await uploadImage.mutateAsync({ fileName: image.name, contentType: image.type as "image/jpeg" | "image/png" | "image/webp" | "image/gif", data })).url;
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Image upload failed.");
+        return;
+      }
+    }
+    if (!imageUrl) {
+      toast.error("Please choose a product image.");
+      return;
+    }
     saveProduct.mutate({
       id: editingId ?? undefined,
       name: String(form.get("name") ?? ""),
       category: String(form.get("category") ?? ""),
       price: Number(form.get("price")),
       stock: Number(form.get("stock")),
-      imageUrl: String(form.get("imageUrl") ?? ""),
+      imageUrl,
       description: String(form.get("description") ?? ""),
       options: String(form.get("options") ?? "").split("\n").map(option => option.trim()).filter(Boolean),
     });
@@ -103,7 +136,7 @@ export default function Admin() {
         <div className="admin-help"><Store size={16} /> Your store data is saved securely. Hidden products remain in the history of orders they were part of.</div>
       </>}
     </main>
-    {editorOpen && <ProductEditor product={products.find(product => product.id === editingId)} pending={saveProduct.isPending} onClose={() => setEditorOpen(false)} onSave={onSave} />}
+    {editorOpen && <ProductEditor product={products.find(product => product.id === editingId)} pending={saveProduct.isPending || uploadImage.isPending} onClose={() => setEditorOpen(false)} onSave={onSave} />}
   </div>;
 }
 
@@ -128,12 +161,22 @@ function OrderList({ orders, loading, onStatus }: { orders: AdminOrder[]; loadin
 }
 
 function ProductEditor({ product, pending, onClose, onSave }: { product?: Product; pending: boolean; onClose: () => void; onSave: (event: FormEvent<HTMLFormElement>) => void }) {
+  const [preview, setPreview] = useState(product?.imageUrl ?? "");
+
+  function onImageChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setPreview(URL.createObjectURL(file));
+  }
+
   return <div className="modal-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}><section className="product-editor" role="dialog" aria-modal="true" aria-labelledby="editor-title">
     <div className="editor-heading"><div><span className="eyebrow">YOUR COLLECTION</span><h2 id="editor-title">{product ? "A little update" : "Add a new find"}</h2></div><button className="icon-button" onClick={onClose} aria-label="Close editor"><X size={19} /></button></div>
     <form onSubmit={onSave} className="editor-form">
       <label>Product name<input name="name" required minLength={2} maxLength={255} defaultValue={product?.name ?? ""} placeholder="e.g. Everyday cotton kurta" /></label>
       <div className="form-row"><label>Category<input name="category" required defaultValue={product?.category ?? ""} placeholder="e.g. Clothing" /></label><label>Price <small>(₹)</small><input name="price" type="number" required min={1} step={1} defaultValue={product?.price ?? ""} placeholder="499" /></label></div>
-      <div className="form-row"><label>Stock available<input name="stock" type="number" required min={0} step={1} defaultValue={product?.stock ?? 1} /></label><label>Image URL<input name="imageUrl" type="url" required defaultValue={product?.imageUrl ?? ""} placeholder="https://…" /></label></div>
+      <div className="form-row"><label>Stock available<input name="stock" type="number" required min={0} step={1} defaultValue={product?.stock ?? 1} /></label><label>Product image<input name="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required={!product} onChange={onImageChange} /><small>JPG, PNG, WEBP or GIF · max 5 MB{product ? " · leave empty to keep current image" : ""}</small></label></div>
+      {preview && <div className="image-preview"><img src={preview} alt="Product preview" /><span>Preview</span></div>}
+      <input name="imageUrl" type="hidden" defaultValue={product?.imageUrl ?? ""} />
       <label>Description<textarea name="description" rows={3} required minLength={5} defaultValue={product?.description ?? ""} placeholder="A few helpful details for shoppers" /></label>
       <label>Options <small>(optional, one per line)</small><textarea name="options" rows={3} defaultValue={product?.options.join("\n") ?? ""} placeholder={"Small\nMedium\nLarge"} /><span className="field-help">Add sizes, colours or other choices customers can select.</span></label>
       <div className="editor-footer"><button type="button" className="button button-outline" onClick={onClose}>Cancel</button><button type="submit" className="button button-primary" disabled={pending}>{pending ? "Saving…" : product ? "Save changes" : "Add to storefront"}</button></div>
