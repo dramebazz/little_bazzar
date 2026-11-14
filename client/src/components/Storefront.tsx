@@ -65,8 +65,20 @@ function CartDrawer({ onClose, startCheckout }: { onClose: () => void; startChec
     onError: error => toast.error(getErrorMessage(error, "We couldn't place that order. Please check your details and try again.")),
   });
 
+  useEffect(() => {
+    if (startCheckout && !customer.isLoading && !customer.data) {
+      onClose();
+      setLocation("/account?mode=register");
+    }
+  }, [customer.data, customer.isLoading, onClose, setLocation, startCheckout]);
+
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!customer.data) {
+      onClose();
+      setLocation("/account?mode=register");
+      return;
+    }
     const form = new FormData(event.currentTarget);
     placeOrder.mutate({
       customerName: String(form.get("customerName") ?? ""),

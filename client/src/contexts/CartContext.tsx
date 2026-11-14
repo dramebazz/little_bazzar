@@ -47,8 +47,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
       });
     },
     setQuantity(id, option, quantity) {
-      if (quantity < 1) return;
-      setLines(current => current.map(line => line.id === id && line.option === option ? { ...line, quantity: Math.min(quantity, line.stock) } : line));
+      setLines(current => current.flatMap(line => {
+        if (line.id !== id || line.option !== option) return [line];
+        if (quantity <= 0) return [];
+        return [{ ...line, quantity: Math.min(quantity, line.stock) }];
+      }));
     },
     remove(id, option) {
       setLines(current => current.filter(line => !(line.id === id && line.option === option)));
