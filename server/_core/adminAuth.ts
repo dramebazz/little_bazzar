@@ -4,7 +4,7 @@ import { scrypt as scryptCallback } from "node:crypto";
 import type { Request } from "express";
 import { SignJWT, jwtVerify } from "jose";
 import type { User } from "../../drizzle/schema.js";
-import { COOKIE_NAME, ADMIN_SESSION_MS } from "../../shared/const";
+import { COOKIE_NAME, ADMIN_SESSION_MS } from "../../shared/const.js";
 import { ENV } from "./env.js";
 
 const SCRYPT_N = 16_384;
