@@ -135,3 +135,22 @@ img { display: block; max-width: 100%; }
 .admin-login-form input:focus { border-color: #e7a7b1; outline: 3px solid #e85d7516; }
 .admin-login-form .login-error { margin: 0; color: #b44458; font-size: 11px; }
 .admin-login-form .button { margin-top: 3px; }
+
+.admin-page-gate { display: block; min-height: 100vh; }
+.admin-page-gate .admin-main { max-width: 560px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 32px 24px; margin: 0 auto; }
+.admin-page-gate .admin-topline { position: absolute; top: 26px; left: 32px; right: 32px; }
+.admin-content-head { min-height: 70px; align-items: flex-start; }
+.admin-content-head > div { min-width: 0; }
+.admin-content-head p { line-height: 1.4; }
+.admin-tabs button.active:after { bottom: -8px; }
+.admin-heading { align-items: center; }
+.admin-heading > div { min-width: 0; }
+.admin-heading .button { flex: 0 0 auto; }
+@media (max-width: 760px) {
+  .admin-main { padding: 22px 18px 30px; }
+  .admin-heading { align-items: flex-start; flex-direction: column; }
+  .admin-heading .button { width: 100%; justify-content: center; }
+  .admin-stats { grid-template-columns: 1fr; }
+  .admin-content-head { gap: 12px; }
+  .admin-content-head .compact-add { display: none; }
+}

@@ -107,15 +107,15 @@ export default function Admin() {
     });
   }
 
-  return <div className="admin-page">
-    <aside className="admin-sidebar">
+  return <div className={`admin-page ${auth.isAuthenticated ? "" : "admin-page-gate"}`}>
+    {auth.isAuthenticated && <aside className="admin-sidebar">
       <Link href="/" className="brand-lockup admin-brand"><span className="brand-mark"><i /><i /><i /><i /></span><span className="brand-name">little bazaar<span>.</span></span></Link>
       <div className="sidebar-label">SELLER DESK</div>
       <button className={`sidebar-item ${section === "products" ? "selected" : ""}`} onClick={() => setSection("products")}><Package size={18} /> Products <span>{activeProducts.length}</span></button>
       <button className={`sidebar-item ${section === "orders" ? "selected" : ""}`} onClick={() => setSection("orders")}><ClipboardList size={18} /> Orders {awaiting > 0 && <span className="new-order-count">{awaiting}</span>}</button>
       <div className="sidebar-spacer" />
       <div className="seller-profile"><div className="profile-avatar">{auth.user?.name?.slice(0, 1) || "S"}</div><div><b>{auth.user?.name || "Store owner"}</b><small>Shop owner</small></div><button aria-label="Sign out" title="Sign out" onClick={() => void auth.logout()}><LogOut size={16} /></button></div>
-    </aside>
+    </aside>}
 
     <main className="admin-main">
       <div className="admin-topline"><Link href="/" className="admin-back"><ArrowLeft size={15} /> View storefront</Link><div><span className="online-dot" /> Your seller desk</div></div>
