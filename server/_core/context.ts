@@ -17,7 +17,7 @@ export async function createContext(
   let user: User | null = null;
   let customer: { email: string } | null = null;
   try {
-    user = await authenticateAdminRequest(opts.req);
+    user = await authenticateAdminRequest(opts.req as HttpRequest);
   } catch {
     // Authentication is optional for public procedures.
     user = null;
