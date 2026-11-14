@@ -10,8 +10,8 @@ type Mode = "login" | "register" | "forgot";
 export default function Account() {
   const [mode, setMode] = useState<Mode>(() => new URLSearchParams(window.location.search).get("mode") === "register" ? "register" : "login");
   const [email, setEmail] = useState("");
-  const me = trpc.customer.me.useQuery();
-  const orders = trpc.customer.orders.useQuery(undefined, { enabled: Boolean(me.data), retry: false });
+  const me = trpc.customer.me.useQuery(undefined, { staleTime: 30_000 });
+  const orders = trpc.customer.orders.useQuery(undefined, { enabled: Boolean(me.data), retry: false, staleTime: 30_000 });
   const logout = trpc.customer.logout.useMutation({ onSuccess: () => { void me.refetch(); toast.success("You’re signed out."); } });
   const cancelOrder = trpc.customer.cancelOrder.useMutation({ onSuccess: () => { void orders.refetch(); toast.success("Your order has been cancelled."); }, onError: error => toast.error(getErrorMessage(error)) });
   if (me.isLoading) return <AccountShell><div className="account-panel">Checking your account…</div></AccountShell>;

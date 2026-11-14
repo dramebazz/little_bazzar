@@ -10,7 +10,7 @@ import { AddToCartPrompt, StoreFooter, StoreHeader } from "@/components/Storefro
 export default function Home() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
-  const products = trpc.shop.catalog.useQuery({ search: search || undefined, category: category === "All" ? undefined : category });
+  const products = trpc.shop.catalog.useQuery({ search: search || undefined, category: category === "All" ? undefined : category }, { staleTime: 30_000 });
   const { add } = useCart();
   const [addedProductId, setAddedProductId] = useState<number | null>(null);
   const categories = useMemo(() => ["All", ...new Set((products.data ?? []).map(item => item.category))], [products.data]);

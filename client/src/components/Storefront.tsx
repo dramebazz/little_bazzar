@@ -25,8 +25,8 @@ export function StoreHeader() {
           <span className="brand-name">little bazaar<span>.</span></span>
         </Link>
         <nav className="store-nav" aria-label="Main navigation">
-          <Link href="/#shop">Shop all</Link>
-          <Link href="/#categories">Categories</Link>
+          <a href="/#shop">Shop all</a>
+          <a href="/#categories">Categories</a>
         </nav>
         <div className="header-actions"><Link href="/account" className="account-link">Account</Link>
           <button className="bag-button" onClick={() => setCartOpen(true)} aria-label={`Open bag, ${count} items`}>

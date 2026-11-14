@@ -9,7 +9,7 @@ import { trpc } from "@/lib/trpc";
 export default function ProductDetail() {
   const params = useParams<{ publicId: string }>();
   const publicId = params.publicId ?? "";
-  const productQuery = trpc.shop.product.useQuery({ publicId }, { enabled: /^[A-Za-z0-9]{12}$/.test(publicId) });
+  const productQuery = trpc.shop.product.useQuery({ publicId }, { enabled: /^[A-Za-z0-9]{12}$/.test(publicId), staleTime: 60_000 });
   const product = productQuery.data;
   const [selectedOption, setSelectedOption] = useState("");
   const { add, lines, setQuantity } = useCart();
@@ -28,6 +28,6 @@ export default function ProductDetail() {
         <p className="detail-payment">Cash on delivery · Pay when your order arrives</p>
       </div>
     </div>}
-    {added && product && <AddToCartPrompt onClose={() => setAdded(false)} />}
+    {added && product && cartLine && <AddToCartPrompt onClose={() => setAdded(false)} />}
   </main><StoreFooter /></div>;
 }
