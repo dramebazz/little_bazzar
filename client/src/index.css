@@ -138,19 +138,24 @@ img { display: block; max-width: 100%; }
 
 .admin-page-gate { display: block; min-height: 100vh; }
 
-/* Keep icon glyphs on the same baseline in every control and card. */
-svg { display: block; flex: 0 0 auto; vertical-align: middle; }
-.button, .bag-button, .admin-back, .back-link, .admin-help, .row-actions button,
-.sidebar-item, .icon-button, .gate-home { align-items: center; }
-.button svg, .bag-button svg, .admin-back svg, .back-link svg,
-.admin-help svg, .row-actions button svg, .sidebar-item svg, .gate-home svg {
-  position: relative;
-  top: 0;
-  transform: none;
+/* Use fixed icon boxes so glyphs stay centered beside text at every breakpoint. */
+.admin-page svg { display: block; flex: 0 0 auto; vertical-align: middle; }
+.admin-page .button, .admin-page .admin-back, .admin-page .admin-help,
+.admin-page .row-actions button, .admin-page .sidebar-item,
+.admin-page .icon-button, .admin-page .gate-home { align-items: center; }
+.admin-page .button svg, .admin-page .admin-back svg, .admin-page .admin-help svg,
+.admin-page .row-actions button svg, .admin-page .sidebar-item svg,
+.admin-page .gate-home svg { position: static; transform: none; }
+.admin-page .stat-card { align-items: center; }
+.admin-page .stat-icon {
+  display: grid;
+  place-items: center;
+  line-height: 0;
 }
-.stat-icon { align-items: center; justify-items: center; }
-.stat-icon svg { width: 18px; height: 18px; }
-.button svg + *, .bag-button svg + *, .sidebar-item svg + * { margin-top: 0; }
+.admin-page .stat-icon svg { width: 18px; height: 18px; }
+.admin-page .button svg, .admin-page .admin-back svg,
+.admin-page .admin-help svg, .admin-page .sidebar-item svg { width: 17px; height: 17px; }
+.admin-page .row-actions button svg { width: 15px; height: 15px; }
 .admin-page:not(.admin-page-gate) > .admin-sidebar { display: flex; }
 .admin-page-gate .admin-main { max-width: 560px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 32px 24px; margin: 0 auto; }
 .admin-page-gate .admin-topline { position: absolute; top: 26px; left: 32px; right: 32px; }

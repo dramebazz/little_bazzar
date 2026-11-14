@@ -53,8 +53,12 @@ async function collections() {
     counters: db.collection<{ _id: string; value: number } & Document>("shop_counters"),
   };
 }
-async function nextId(counters: Collection<{ _id: string; value: number } & Document>, key: string, session: ClientSession) {
-  const result = await counters.findOneAndUpdate({ _id: key }, { $inc: { value: 1 } }, { upsert: true, returnDocument: "after", session });
+async function nextId(counters: Collection<{ _id: string; value: number } & Document>, key: string, session?: ClientSession) {
+  const result = await counters.findOneAndUpdate(
+    { _id: key },
+    { $inc: { value: 1 } },
+    { upsert: true, returnDocument: "after", ...(session ? { session } : {}) },
+  );
   if (!result) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not allocate a store record ID." });
   return result.value;
 }
@@ -81,7 +85,7 @@ export async function listAdminProducts() {
   return (await products.find({}).sort({ updatedAt: -1 }).toArray()).map(productShape);
 }
 export async function saveProduct(input: ProductInput & { id?: number }) {
-  const { client, products } = await collections();
+  const { products, counters } = await collections();
   const now = new Date();
   const values = { name: input.name.trim(), description: input.description.trim(), category: input.category.trim(), imageUrl: input.imageUrl.trim(), price: input.price, stock: input.stock, options: cleanOptions(input.options), updatedAt: now };
   if (input.id) {
@@ -89,17 +93,10 @@ export async function saveProduct(input: ProductInput & { id?: number }) {
     if (!result) throw new TRPCError({ code: "NOT_FOUND", message: "Product not found." });
     return productShape(result);
   }
-  const session = client.startSession();
-  try {
-    let inserted!: ProductDoc;
-    await session.withTransaction(async () => {
-      const { counters } = await collections();
-      const id = await nextId(counters, "product", session);
-      inserted = { id, ...values, isActive: true, createdAt: now };
-      await products.insertOne(inserted, { session });
-    });
-    return productShape(inserted);
-  } finally { await session.endSession(); }
+  const id = await nextId(counters, "product");
+  const inserted: ProductDoc = { id, ...values, isActive: true, createdAt: now };
+  await products.insertOne(inserted);
+  return productShape(inserted);
 }
 export async function setProductVisibility(id: number, isActive: boolean) {
   const { products } = await collections();
