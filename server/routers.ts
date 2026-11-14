@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { COOKIE_NAME, ADMIN_SESSION_MS } from "@shared/const";
+import { COOKIE_NAME, ADMIN_SESSION_MS } from "../shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { createAdminSessionToken, isAdminLoginConfigured, verifyAdminCredentials } from "./_core/adminAuth";
 import { systemRouter } from "./_core/systemRouter";
