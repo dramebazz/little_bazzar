@@ -98,7 +98,8 @@ export async function listCatalog(search?: string, category?: string) {
   return rows.map(productShape);
 }
 export async function findProductByPublicId(publicId: string) {
-  const { products } = await collections();
+  const client = await mongoClient();
+  const products = client.db().collection<ProductDoc>("shop_products");
   const product = await products.findOne({ publicId, isActive: true });
   return product ? productShape(product) : null;
 }

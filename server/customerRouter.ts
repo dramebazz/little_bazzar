@@ -7,8 +7,6 @@ import { publicProcedure, router } from "./_core/trpc.js";
 import * as shopDb from "./shopDb.js";
 
 const credentials = z.object({ email: z.string().trim().email().max(320), password: z.string().min(1).max(128) });
-const recovery = z.object({ email: z.string().trim().email().max(320), answer: z.string().trim().min(1).max(255), newPassword: z.string().min(1).max(128) });
-
 export const customerRouter = router({
   me: publicProcedure.query(async ({ ctx }) => {
     if (!ctx.customer) return null;
@@ -16,10 +14,6 @@ export const customerRouter = router({
     return account ? { email: account.email, name: account.name } : null;
   }),
   securityQuestion: publicProcedure.query(() => recoveryQuestions[Math.floor(Math.random() * recoveryQuestions.length)]),
-  recoveryQuestion: publicProcedure.input(z.object({ email: z.string().trim().email().max(320) })).query(async ({ input }) => {
-    const account = await shopDb.findCustomer(normalizeCustomerEmail(input.email));
-    return account?.recoveryQuestion ?? null;
-  }),
   register: publicProcedure.input(credentials.extend({
     name: z.string().trim().min(2).max(180),
     securityQuestion: z.enum(recoveryQuestions),
@@ -28,6 +22,9 @@ export const customerRouter = router({
     validateCustomerPassword(input.password);
     const email = normalizeCustomerEmail(input.email);
     if (await shopDb.findCustomer(email)) throw new TRPCError({ code: "CONFLICT", message: "An account with this email already exists." });
+    if ((await shopDb.listCustomerOrders(email)).length > 0) {
+      throw new TRPCError({ code: "CONFLICT", message: "This email already has guest orders. Please contact the store to verify ownership before creating an account." });
+    }
     await shopDb.createCustomer({ email, name: input.name.trim(), passwordHash: await hashCustomerSecret(input.password), recoveryQuestion: input.securityQuestion, recoveryAnswerHash: await hashCustomerSecret(input.securityAnswer.toLowerCase()) });
     ctx.res.cookie(CUSTOMER_COOKIE_NAME, await createCustomerSession(email), { ...getSessionCookieOptions(ctx.req), maxAge: CUSTOMER_SESSION_MS });
     return { success: true } as const;
@@ -36,14 +33,6 @@ export const customerRouter = router({
     const account = await shopDb.findCustomer(normalizeCustomerEmail(input.email));
     if (!account || !(await verifyCustomerSecret(input.password, account.passwordHash))) throw new TRPCError({ code: "UNAUTHORIZED", message: "Email or password is incorrect." });
     ctx.res.cookie(CUSTOMER_COOKIE_NAME, await createCustomerSession(account.email), { ...getSessionCookieOptions(ctx.req), maxAge: CUSTOMER_SESSION_MS });
-    return { success: true } as const;
-  }),
-  resetPassword: publicProcedure.input(recovery).mutation(async ({ input }) => {
-    validateCustomerPassword(input.newPassword);
-    const email = normalizeCustomerEmail(input.email);
-    const account = await shopDb.findCustomer(email);
-    if (!account || !(await verifyCustomerSecret(input.answer.toLowerCase(), account.recoveryAnswerHash))) throw new TRPCError({ code: "UNAUTHORIZED", message: "The recovery answer is incorrect." });
-    await shopDb.updateCustomerPassword(email, await hashCustomerSecret(input.newPassword));
     return { success: true } as const;
   }),
   logout: publicProcedure.mutation(({ ctx }) => {

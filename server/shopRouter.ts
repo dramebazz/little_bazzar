@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { adminProcedure, publicProcedure, router } from "./_core/trpc.js";
+import { normalizeCustomerEmail } from "./_core/customerAuth.js";
 import * as shopDb from "./shopDb.js";
 
 const productInput = z.object({
@@ -24,13 +25,19 @@ export const shopRouter = router({
   placeOrder: publicProcedure.input(z.object({
     customerName: z.string().trim().min(2).max(180),
     phone: z.string().trim().min(7).max(32).regex(/^[+\d() .-]+$/, "Enter a valid phone number."),
-    email: z.union([z.literal(""), z.string().trim().email().max(320)]).optional(),
+    email: z.string().trim().email().max(320),
     address: z.string().trim().min(5).max(2000),
     city: z.string().trim().min(2).max(120),
     pincode: z.string().trim().min(4).max(20),
     notes: z.string().trim().max(2000).optional(),
     items: z.array(z.object({ productId: z.number().int().positive(), quantity: z.number().int().min(1).max(99), option: z.string().max(255).optional() })).min(1).max(50),
-  })).mutation(({ input }) => shopDb.placeOrder(input)),
+  })).mutation(({ input, ctx }) => {
+    if (!ctx.customer) throw new TRPCError({ code: "UNAUTHORIZED", message: "Please sign in before placing an order." });
+    if (normalizeCustomerEmail(input.email) !== ctx.customer.email) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "Order email must match your signed-in account." });
+    }
+    return shopDb.placeOrder(input);
+  }),
   admin: router({
     uploadImage: adminProcedure.input(z.object({
       fileName: z.string().trim().min(1).max(255),
