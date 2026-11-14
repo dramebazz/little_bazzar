@@ -2,14 +2,13 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { adminProcedure, publicProcedure, router } from "./_core/trpc.js";
 import * as shopDb from "./shopDb.js";
-import { storagePut } from "./storage.js";
 
 const productInput = z.object({
   id: z.number().int().positive().optional(),
   name: z.string().trim().min(2).max(255),
   description: z.string().trim().min(5).max(5000),
   category: z.string().trim().min(2).max(120),
-  imageUrl: z.string().trim().max(2048).refine(value => /^https?:\/\//i.test(value) || value.startsWith("/api/assets/"), "Upload an image or use an http/https image URL."),
+  imageUrl: z.string().trim().max(7_500_000).refine(value => /^https?:\/\//i.test(value) || /^data:image\/(?:jpeg|png|webp|gif);base64,/.test(value), "Upload an image or use an http/https image URL."),
   price: z.number().int().positive().max(10_000_000),
   stock: z.number().int().min(0).max(1_000_000),
   options: z.array(z.string().trim().min(1).max(255)).max(50),
@@ -43,8 +42,7 @@ export const shopRouter = router({
       if (bytes.length > 5 * 1024 * 1024) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Image must be 5 MB or smaller." });
       }
-      const extension = input.contentType.split("/")[1].replace("jpeg", "jpg");
-      return storagePut(`products/${Date.now()}-${input.fileName.replace(/[^a-z0-9.-]/gi, "-")}.${extension}`, bytes, input.contentType);
+      return { key: input.fileName, url: input.data };
     }),
     products: adminProcedure.query(() => shopDb.listAdminProducts()),
     saveProduct: adminProcedure.input(productInput).mutation(({ input }) => shopDb.saveProduct(input)),
