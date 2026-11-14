@@ -39,8 +39,11 @@ export function StoreHeader() {
   </>;
 }
 
-export function AddToCartPrompt({ onClose }: { onClose: () => void }) {
-  return <div className="add-cart-prompt"><div><strong>Added to your bag</strong><small>Ready when you are.</small></div><button className="button button-primary" onClick={() => window.dispatchEvent(new Event("open-cart-checkout"))}>Continue to checkout</button><button className="prompt-close" onClick={onClose} aria-label="Close">×</button></div>;
+export function AddToCartPrompt({ productId, option, onClose }: { productId: number; option?: string; onClose: () => void }) {
+  const cart = useCart();
+  const line = cart.lines.find(item => item.id === productId && item.option === option);
+  if (!line) return null;
+  return <div className="add-cart-prompt"><div><strong>Added to your bag</strong><small>{line.name}</small></div><div className="prompt-quantity" aria-label={`Quantity for ${line.name}`}><button onClick={() => cart.setQuantity(line.id, line.option, line.quantity - 1)} disabled={line.quantity <= 1} aria-label="Decrease quantity">−</button><b>{line.quantity}</b><button onClick={() => cart.setQuantity(line.id, line.option, line.quantity + 1)} disabled={line.quantity >= line.stock} aria-label="Increase quantity">+</button></div><button className="button button-primary" onClick={() => window.dispatchEvent(new Event("open-cart-checkout"))}>Continue to checkout</button><button className="prompt-close" onClick={onClose} aria-label="Close">×</button></div>;
 }
 
 export function StoreFooter() {

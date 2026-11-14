@@ -206,15 +206,17 @@ export async function placeOrder(input: CheckoutInput) {
     return result;
   } finally { await session.endSession(); }
 }
-export async function updateOrderStatus(id: number, status: OrderStatus): Promise<OrderRecord> {
+export async function updateOrderStatus(id: number, status: OrderStatus, customerEmail?: string): Promise<OrderRecord> {
   const { client, products, orders, items } = await collections();
   const session = client.startSession();
   let updated: OrderRecord | null = null;
   try {
     await session.withTransaction(async () => {
-      const current = await orders.findOne({ id }, { session });
+      const current = await orders.findOne(customerEmail ? { id, email: customerEmail.trim().toLowerCase() } : { id }, { session });
       if (!current) throw new TRPCError({ code: "NOT_FOUND", message: "Order not found." });
-      if (current.status === "delivered" && status === "cancelled") throw new TRPCError({ code: "BAD_REQUEST", message: "A delivered order cannot be cancelled." });
+      if (status === "cancelled" && !["new", "confirmed", "packed"].includes(current.status)) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "This order can no longer be cancelled because it has already been shipped or completed." });
+      }
       if (current.status !== status && (current.status === "cancelled" || status === "cancelled")) {
         const lines = await items.find({ orderId: id }, { session }).toArray();
         const quantities = new Map<number, number>();

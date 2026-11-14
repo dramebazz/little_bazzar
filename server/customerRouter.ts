@@ -54,4 +54,9 @@ export const customerRouter = router({
     if (!ctx.customer) throw new TRPCError({ code: "UNAUTHORIZED", message: "Please sign in to view your orders." });
     return shopDb.listCustomerOrders(ctx.customer.email);
   }),
+  cancelOrder: publicProcedure.input(z.object({ id: z.number().int().positive() })).mutation(async ({ input, ctx }) => {
+    if (!ctx.customer) throw new TRPCError({ code: "UNAUTHORIZED", message: "Please sign in to manage your orders." });
+    await shopDb.cancelCustomerOrder(input.id, ctx.customer.email);
+    return { success: true } as const;
+  }),
 });
