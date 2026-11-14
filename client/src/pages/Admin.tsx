@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { TRPCClientError } from "@trpc/client";
 import type { inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "../../../server/routers";
-import { Archive, ArrowLeft, ClipboardList, ImagePlus, LogIn, LogOut, Package, Plus, ShieldCheck, Store, X } from "lucide-react";
+import { Archive, ArrowLeft, ClipboardList, ImagePlus, LogIn, LogOut, Package, Plus, ShieldCheck, Sparkles, Store, X } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -150,7 +150,7 @@ export default function Admin() {
       {auth.isAuthenticated && denied && <section className="admin-gate"><div className="gate-icon"><ShieldCheck size={28} /></div><span className="eyebrow">OWNER ACCESS</span><h1>Only the shop owner can open this desk.</h1><p>This account isn’t linked to the store owner email. If you have just configured the owner address, sign out and back in with that same account.</p><button className="button button-outline" onClick={() => void auth.logout()}><LogOut size={16} /> Sign out and switch account</button><Link href="/" className="gate-home">Back to the storefront</Link></section>}
       {auth.isAuthenticated && dataError && <section className="admin-gate"><div className="gate-icon"><Package size={28} /></div><span className="eyebrow">STORE DATA</span><h1>Store data could not load.</h1><p>{dataError.message || "Check the MongoDB connection and try again."}</p><button className="button button-primary" onClick={() => { void productsQuery.refetch(); void ordersQuery.refetch(); }}>Try again</button></section>}
       {auth.isAuthenticated && !denied && !dataError && <>
-        <header className="admin-heading"><div><span className="eyebrow">YOUR STORE AT A GLANCE</span><h1>Good morning{auth.user?.name ? `, ${auth.user.name.split(" ")[0]}` : ""} <span>✳</span></h1><p>A little care goes a long way. Here's how your shop is doing.</p></div>{section === "products" && <button className="button button-primary" onClick={() => openEditor()}><Plus size={17} /> Add a product</button>}</header>
+        <header className="admin-heading"><div><span className="eyebrow">YOUR STORE AT A GLANCE</span><h1>Good morning{auth.user?.name ? `, ${auth.user.name.split(" ")[0]}` : ""} <Sparkles size={18} aria-hidden="true" /></h1><p>A little care goes a long way. Here's how your shop is doing.</p></div>{section === "products" && <button className="button button-primary" onClick={() => openEditor()}><Plus size={17} /> Add a product</button>}</header>
         <div className="admin-stats">
           <div className="stat-card"><span className="stat-icon rose"><Package size={18} /></span><div><small>LIVE PRODUCTS</small><strong>{productsQuery.isLoading ? "—" : activeProducts.length}</strong><span>available in your shop</span></div></div>
           <div className="stat-card"><span className="stat-icon peach"><ClipboardList size={18} /></span><div><small>ORDERS TO CHECK</small><strong>{ordersQuery.isLoading ? "—" : awaiting}</strong><span>new or being confirmed</span></div></div>
