@@ -137,6 +137,20 @@ img { display: block; max-width: 100%; }
 .admin-login-form .button { margin-top: 3px; }
 
 .admin-page-gate { display: block; min-height: 100vh; }
+
+/* Keep icon glyphs on the same baseline in every control and card. */
+svg { display: block; flex: 0 0 auto; vertical-align: middle; }
+.button, .bag-button, .admin-back, .back-link, .admin-help, .row-actions button,
+.sidebar-item, .icon-button, .gate-home { align-items: center; }
+.button svg, .bag-button svg, .admin-back svg, .back-link svg,
+.admin-help svg, .row-actions button svg, .sidebar-item svg, .gate-home svg {
+  position: relative;
+  top: 0;
+  transform: none;
+}
+.stat-icon { align-items: center; justify-items: center; }
+.stat-icon svg { width: 18px; height: 18px; }
+.button svg + *, .bag-button svg + *, .sidebar-item svg + * { margin-top: 0; }
 .admin-page:not(.admin-page-gate) > .admin-sidebar { display: flex; }
 .admin-page-gate .admin-main { max-width: 560px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 32px 24px; margin: 0 auto; }
 .admin-page-gate .admin-topline { position: absolute; top: 26px; left: 32px; right: 32px; }

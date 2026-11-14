@@ -8,7 +8,7 @@ const productInput = z.object({
   name: z.string().trim().min(2).max(255),
   description: z.string().trim().min(5).max(5000),
   category: z.string().trim().min(2).max(120),
-  imageUrl: z.string().trim().max(7_500_000).refine(value => /^https?:\/\//i.test(value) || /^data:image\/(?:jpeg|png|webp|gif);base64,/.test(value), "Upload an image or use an http/https image URL."),
+  imageUrl: z.string().trim().max(4_000_000).refine(value => /^https?:\/\//i.test(value) || /^data:image\/(?:jpeg|png|webp|gif);base64,/.test(value), "Upload an image or use an http/https image URL."),
   price: z.number().int().positive().max(10_000_000),
   stock: z.number().int().min(0).max(1_000_000),
   options: z.array(z.string().trim().min(1).max(255)).max(50),

@@ -1,8 +1,19 @@
-import express, { type RequestHandler } from "express";
+import express from "express";
 import { ENV } from "./env.js";
 
-export function registerStorageProxy(app: ReturnType<typeof express>) {
-  const handler: RequestHandler = async (req, res) => {
+type StorageApp = {
+  get(path: string, handler: (req: StorageRequest, res: StorageResponse) => unknown): unknown;
+};
+type StorageRequest = { params: Record<string, string> };
+type StorageResponse = {
+  send(body: string): unknown;
+  set(field: string, value: string): StorageResponse;
+  status(code: number): StorageResponse;
+  redirect(status: number, url: string): unknown;
+};
+
+export function registerStorageProxy(app: ReturnType<typeof express> & StorageApp) {
+  const handler = async (req: StorageRequest, res: StorageResponse) => {
     const key = (req.params as Record<string, string>)[0];
     if (!key) {
       res.status(400).send("Missing storage key");
