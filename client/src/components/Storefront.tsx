@@ -45,7 +45,7 @@ export function AddToCartPrompt({ onClose }: { onClose: () => void }) {
 }
 
 export function StoreFooter() {
-  return <footer className="store-footer"><div className="footer-brand"><span className="brand-mark small"><i /><i /><i /><i /></span> little bazaar</div><p>Good finds, shared with care.</p><span>Cash on delivery · Your order details stay private</span></footer>;
+  return <footer className="store-footer"><div className="footer-brand"><img className="footer-brand-mark" src="/brand-mark.svg" alt="" /> little bazaar</div><p>Good finds, shared with care.</p><span>Cash on delivery · Your order details stay private</span></footer>;
 }
 
 function CartDrawer({ onClose, startCheckout }: { onClose: () => void; startCheckout?: boolean }) {

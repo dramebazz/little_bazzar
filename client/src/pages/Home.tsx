@@ -58,7 +58,7 @@ export default function Home() {
         {addedProductId !== null && <AddToCartPrompt onClose={() => setAddedProductId(null)} />}
       </section>
 
-      <section className="seller-note"><div className="note-icon"><Flower2 size={22} /></div><div><span className="eyebrow">A NOTE FROM THE SELLER</span><h2>Small shop.<br /><em>Thoughtful picks.</em></h2><p>Every item here is chosen with a little extra care. Thanks for supporting a small business and making room for something lovely.</p></div><div className="note-doodle"><Flower2 size={28} /><span>made with<br />a little love</span></div></section>
+      <section className="seller-note"><div className="note-icon"><Flower2 size={22} /></div><div><span className="eyebrow">A NOTE FROM THE SELLER</span><h2>Small shop.<br /><em>Thoughtful picks.</em></h2><p>Every item here is chosen with a little extra care. Thanks for supporting a small business and making room for something lovely.</p></div><div className="note-doodle"><Heart size={24} /><span>made with<br />a little love</span></div></section>
     </main>
     <StoreFooter />
   </div>;
