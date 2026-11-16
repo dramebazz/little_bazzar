@@ -189,7 +189,7 @@ export async function listOrders() {
   const [allOrders, allItems] = await Promise.all([orders.find({}).sort({ createdAt: -1 }).toArray(), items.find({}).toArray()]);
   const grouped = new Map<number, OrderItemRecord[]>();
   for (const item of allItems) grouped.set(item.orderId, [...(grouped.get(item.orderId) ?? []), item]);
-  return allOrders.map(({ _id: _orderId, ...order }) => ({ ...order, items: grouped.get(order.id) ?? [] }));
+  return allOrders.map(({ _id: _orderId, ...order }) => ({ ...order, cancellationReason: order.cancellationReason ?? null, items: grouped.get(order.id) ?? [] }));
 }
 export async function placeOrder(input: CheckoutInput) {
   const { client, products, orders, items, counters } = await collections();

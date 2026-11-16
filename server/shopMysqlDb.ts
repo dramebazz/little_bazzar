@@ -124,7 +124,7 @@ export async function listOrders() {
   const allItems = await db.select().from(orderItems).where(inArray(orderItems.orderId, orderIds));
   const grouped = new Map<number, typeof allItems>();
   for (const item of allItems) grouped.set(item.orderId, [...(grouped.get(item.orderId) ?? []), item]);
-  return allOrders.map(order => ({ ...order, items: grouped.get(order.id) ?? [] }));
+  return allOrders.map(order => ({ ...order, cancellationReason: null, items: grouped.get(order.id) ?? [] }));
 }
 
 export async function placeOrder(input: CheckoutInput) {
