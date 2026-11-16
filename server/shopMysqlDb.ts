@@ -58,6 +58,12 @@ export async function listCatalog(search?: string, category?: string) {
   return rows.map(shapeProduct);
 }
 
+export async function listCategories() {
+  const db = await database();
+  const rows = await db.select({ category: products.category }).from(products).where(eq(products.isActive, true));
+  return [...new Set(rows.map(row => row.category))].sort();
+}
+
 export async function findProduct(_publicId: string) {
   return null;
   /*

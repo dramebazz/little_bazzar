@@ -85,7 +85,8 @@ function cleanOptions(options: string[]) { return options.map(option => option.t
 function unavailable() { return new TRPCError({ code: "BAD_REQUEST", message: "A product in your bag is no longer available. Please refresh your bag." }); }
 
 export async function listCatalog(search?: string, category?: string) {
-  const { products } = await collections();
+  const client = await mongoClient();
+  const products = client.db().collection<ProductDoc>("shop_products");
   const filter: Document = { isActive: true };
   if (category && category !== "All") filter.category = category;
   if (search) filter.name = { $regex: search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), $options: "i" };
@@ -96,6 +97,12 @@ export async function listCatalog(search?: string, category?: string) {
     row.publicId = publicId;
   }
   return rows.map(productShape);
+}
+export async function listCategories() {
+  const client = await mongoClient();
+  const products = client.db().collection<ProductDoc>("shop_products");
+  const categories = await products.distinct("category", { isActive: true });
+  return categories.filter((category): category is string => typeof category === "string" && category.length > 0).sort();
 }
 export async function findProductByPublicId(publicId: string) {
   const client = await mongoClient();

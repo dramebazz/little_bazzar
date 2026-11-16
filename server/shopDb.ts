@@ -11,6 +11,10 @@ export async function listCatalog(search?: string, category?: string) {
   return (await adapter()).listCatalog(search, category);
 }
 
+export async function listCategories() {
+  return (await adapter()).listCategories();
+}
+
 export async function findProductByPublicId(publicId: string) {
   return (await adapter()).findProduct(publicId);
 }

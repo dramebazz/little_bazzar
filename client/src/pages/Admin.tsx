@@ -54,8 +54,8 @@ export default function Admin() {
   const [section, setSection] = useState<"products" | "orders">("products");
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const productsQuery = trpc.shop.admin.products.useQuery(undefined, { enabled: auth.isAuthenticated, retry: false, staleTime: 30_000 });
-  const ordersQuery = trpc.shop.admin.orders.useQuery(undefined, { enabled: auth.isAuthenticated && section === "orders", retry: false, staleTime: 30_000 });
+  const productsQuery = trpc.shop.admin.products.useQuery(undefined, { enabled: auth.isAuthenticated, retry: false });
+  const ordersQuery = trpc.shop.admin.orders.useQuery(undefined, { enabled: auth.isAuthenticated, retry: false });
   const utils = trpc.useUtils();
   const loginAdmin = trpc.auth.loginAdmin.useMutation({
     onSuccess: async () => { setLoginPassword(""); toast.success("You’re signed in to your shop"); await utils.auth.me.invalidate(); },
@@ -157,8 +157,8 @@ export default function Admin() {
         <header className="admin-heading"><div><span className="eyebrow">YOUR STORE AT A GLANCE</span><h1>Good morning{auth.user?.name ? `, ${auth.user.name.split(" ")[0]}` : ""} <Sparkles size={18} aria-hidden="true" /></h1><p>A little care goes a long way. Here's how your shop is doing.</p></div>{section === "products" && <button className="button button-primary" onClick={() => openEditor()}><Plus size={17} /> Add a product</button>}</header>
         <div className="admin-stats">
           <div className="stat-card"><span className="stat-icon rose"><Package size={18} /></span><div><small>LIVE PRODUCTS</small><strong>{productsQuery.isLoading ? "—" : activeProducts.length}</strong><span>available in your shop</span></div></div>
-          <div className="stat-card"><span className="stat-icon peach"><ClipboardList size={18} /></span><div><small>ORDERS TO CHECK</small><strong>{ordersQuery.data ? awaiting : "—"}</strong><span>open Orders to load</span></div></div>
-          <div className="stat-card"><span className="stat-icon yellow">₹</span><div><small>ORDER TOTALS</small><strong>{ordersQuery.data ? formatINR(revenue) : "—"}</strong><span>open Orders to load</span></div></div>
+          <div className="stat-card"><span className="stat-icon peach"><ClipboardList size={18} /></span><div><small>ORDERS TO CHECK</small><strong>{ordersQuery.isLoading ? "—" : awaiting}</strong><span>new or being confirmed</span></div></div>
+          <div className="stat-card"><span className="stat-icon yellow">₹</span><div><small>ORDER TOTALS</small><strong>{ordersQuery.isLoading ? "—" : formatINR(revenue)}</strong><span>excludes cancelled orders</span></div></div>
         </div>
         <section className="admin-content-card">
           <div className="admin-content-head"><div><div className="admin-tabs"><button onClick={() => setSection("products")} className={section === "products" ? "active" : ""}>Products</button><button onClick={() => setSection("orders")} className={section === "orders" ? "active" : ""}>Orders{awaiting > 0 && <span className="tab-count">{awaiting}</span>}</button></div><p>{section === "products" ? "Keep your little collection up to date." : "Every order, all in one place."}</p></div>{section === "products" && <button className="button button-outline compact-add" onClick={() => openEditor()}><Plus size={16} /> Add product</button>}</div>
