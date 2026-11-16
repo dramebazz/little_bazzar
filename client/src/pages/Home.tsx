@@ -47,7 +47,7 @@ export default function Home() {
       <section id="shop" className="catalog-section">
         <div className="catalog-toolbar">
           <div className="category-chips">{categories.map(item => <button key={item} className={`category-chip ${category === item ? "active" : ""}`} onClick={() => setCategory(item)}>{item}</button>)}</div>
-          <label className="search-box"><Search size={17} /><input value={search} onChange={event => setSearch(event.target.value)} placeholder="Find something lovely" aria-label="Search products" /><kbd>⌕</kbd></label>
+          <label className="search-box"><Search size={17} /><input value={search} onChange={event => setSearch(event.target.value)} placeholder="Find something lovely" aria-label="Search products" /></label>
         </div>
         {products.isLoading ? <div className="product-grid">{Array.from({ length: 4 }, (_, index) => <div className="product-skeleton" key={index} />)}</div> : products.isError ? <div className="catalog-empty"><PackageOpen size={28} /><h3>We couldn't load the collection</h3><p>Please try again in a moment.</p><button className="button button-outline" onClick={() => void products.refetch()}>Try again</button></div> : products.data?.length ? <div className="product-grid">{products.data.map((product, index) => <article className="product-card" key={product.id}>
           <Link href={`/product/${product.publicId}`} className="product-image-link">
