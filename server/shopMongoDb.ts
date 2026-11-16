@@ -11,10 +11,13 @@ export type OrderItemRecord = {
   id: number; orderId: number; productId: number | null; productName: string; unitPrice: number;
   quantity: number; selectedOption: string | null;
 };
+export type CustomerOrderItem = OrderItemRecord & {
+  imageUrl: string | null; publicId: string | null; isActive: boolean;
+};
 export type OrderRecord = {
   id: number; orderNumber: string; customerName: string; phone: string; email: string | null;
   address: string; city: string; pincode: string; notes: string | null; status: OrderStatus;
-  total: number; createdAt: Date; updatedAt: Date;
+  total: number; createdAt: Date; updatedAt: Date; cancellationReason?: string | null;
 };
 export type CustomerAccountDoc = {
   _id?: unknown;
@@ -137,13 +140,23 @@ export async function updateCustomerPassword(email: string, passwordHash: string
   await customers.updateOne({ email: email.trim().toLowerCase() }, { $set: { passwordHash, updatedAt: new Date() } });
 }
 export async function listCustomerOrders(email: string) {
-  const { orders, items } = await collections();
+  const { orders, items, products } = await collections();
   const escapedEmail = email.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const allOrders = await orders.find({ email: { $regex: `^${escapedEmail}$`, $options: "i" } }).sort({ createdAt: -1 }).toArray();
   if (allOrders.length === 0) return [];
   const allItems = await items.find({ orderId: { $in: allOrders.map(order => order.id) } }).toArray();
-  const grouped = new Map<number, OrderItemRecord[]>();
-  for (const item of allItems) grouped.set(item.orderId, [...(grouped.get(item.orderId) ?? []), item]);
+  const productIds = allItems.flatMap(item => item.productId === null ? [] : [item.productId]);
+  const productLinks = new Map((await products.find({ id: { $in: productIds } }).project({ id: 1, publicId: 1, imageUrl: 1, isActive: 1 }).toArray()).map(product => [product.id, product]));
+  const grouped = new Map<number, CustomerOrderItem[]>();
+  for (const item of allItems) {
+    const product = item.productId === null ? undefined : productLinks.get(item.productId);
+    grouped.set(item.orderId, [...(grouped.get(item.orderId) ?? []), {
+      ...item,
+      imageUrl: product?.imageUrl ?? null,
+      publicId: product?.publicId ?? null,
+      isActive: product?.isActive ?? false,
+    }]);
+  }
   return allOrders.map(({ _id: _orderId, items: _embeddedItems, ...order }) => ({ ...order, items: grouped.get(order.id) ?? [] }));
 }
 export async function saveProduct(input: ProductInput & { id?: number }) {
@@ -220,7 +233,7 @@ export async function placeOrder(input: CheckoutInput) {
     return result;
   } finally { await session.endSession(); }
 }
-export async function updateOrderStatus(id: number, status: OrderStatus, customerEmail?: string): Promise<OrderRecord> {
+export async function updateOrderStatus(id: number, status: OrderStatus, customerEmail?: string, cancellationReason?: string): Promise<OrderRecord> {
   const { client, products, orders, items } = await collections();
   const session = client.startSession();
   let updated: OrderRecord | null = null;
@@ -246,9 +259,10 @@ export async function updateOrderStatus(id: number, status: OrderStatus, custome
           }
         }
       }
-      await orders.updateOne({ id }, { $set: { status, updatedAt: new Date() } }, { session });
+      const update = { status, updatedAt: new Date(), ...(status === "cancelled" && cancellationReason ? { cancellationReason } : {}) };
+      await orders.updateOne({ id }, { $set: update }, { session });
       const { _id: _mongoId, items: _embeddedItems, ...record } = current;
-      updated = { ...record, status, updatedAt: new Date() };
+      updated = { ...record, ...update };
     }, { readConcern: { level: "snapshot" }, writeConcern: { w: "majority" } });
     if (!updated) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not update order status." });
     return updated;

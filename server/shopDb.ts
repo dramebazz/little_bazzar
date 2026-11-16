@@ -67,7 +67,7 @@ export async function updateOrderStatus(id: number, status: Parameters<typeof mo
   return (await adapter()).updateOrderStatus(id, status);
 }
 
-export async function cancelCustomerOrder(id: number, email: string) {
-  if (process.env.MONGODB_URI) return mongo.updateOrderStatus(id, "cancelled", email);
+export async function cancelCustomerOrder(id: number, email: string, reason: string) {
+  if (process.env.MONGODB_URI) return mongo.updateOrderStatus(id, "cancelled", email, reason);
   throw new Error("Customer order cancellation requires the MongoDB shop adapter.");
 }

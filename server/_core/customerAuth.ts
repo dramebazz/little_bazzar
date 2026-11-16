@@ -85,7 +85,9 @@ export function normalizeCustomerEmail(email: string) {
 }
 
 export function validateCustomerPassword(password: string) {
-  if (password.length < 8 || password.length > 128) throw new TRPCError({ code: "BAD_REQUEST", message: "Password must be 8–128 characters." });
+  if (password.length < 8 || password.length > 128 || !/[A-Z]/.test(password) || !/\d/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: "Password must be at least 8 characters and include a capital letter, a number, and a symbol." });
+  }
 }
 
 export type CustomerCollection = Collection<CustomerAccountDoc & Document>;

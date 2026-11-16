@@ -336,12 +336,14 @@ img { display: block; max-width: 100%; }
 .account-form { display: flex; flex-direction: column; gap: 12px; }
 .account-form label { display: flex; flex-direction: column; gap: 5px; color: #594b46; font-size: 10px; font-weight: 900; }
 .account-form label small { color: #9b8e88; font-weight: 600; }
-.account-form input { width: 100%; min-height: 42px; padding: 10px 12px; border: 1px solid #e9dfd8; border-radius: 9px; background: #fff; color: var(--ink); font-size: 12px; }
+.account-form input, .account-form select { width: 100%; min-height: 42px; padding: 10px 12px; border: 1px solid #e9dfd8; border-radius: 9px; background: #fff; color: var(--ink); font-size: 12px; }
 .account-switch { display: flex; justify-content: space-between; gap: 12px; margin-top: 18px; }
-.account-switch button { border: 0; background: transparent; color: var(--rose-deep); font-size: 10px; font-weight: 900; }
+.account-switch button { width: 100%; min-height: 44px; border: 1px solid #eaded8; border-radius: 10px; background: #fff; color: var(--rose-deep); font-size: 12px; font-weight: 900; }
+.account-switch button:hover { border-color: var(--rose); background: #fff8f6; }
 .account-switch-back { display: block; margin-top: 14px; }
 .account-switch-back button { width: 100%; min-height: 44px; border: 1px solid #eaded8; border-radius: 10px; background: #fff; color: var(--ink); font-size: 12px; }
 .account-switch-back button:hover { border-color: var(--rose); color: var(--rose-deep); }
+.field-error { color: var(--rose-deep) !important; font-size: 9px !important; font-weight: 700 !important; }
 .account-dashboard { padding: 28px; }
 .account-heading { display: flex; align-items: start; justify-content: space-between; gap: 16px; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
 .account-heading p { margin: 0; color: #9b8e88; font-size: 10px; }
@@ -359,7 +361,7 @@ img { display: block; max-width: 100%; }
 .account-status { padding: 5px 8px; border-radius: 99px; background: #fff0ed; color: var(--rose-deep); font-size: 8px; font-weight: 900; text-transform: capitalize; }
 .account-status-delivered { background: #edf7ef; color: #598266; }
 .account-status-cancelled { background: #f3f0ed; color: #948984; }
-.account-order-items { display: grid; gap: 4px; margin: 13px 0; color: #837671; font-size: 10px; }
+.account-order-items { display: grid; gap: 7px; margin: 13px 0; color: #837671; font-size: 10px; }.account-order-item { display: flex; align-items: center; gap: 8px; min-width: 0; border-radius: 7px; }.account-order-item[href]:hover { color: var(--rose-deep); }.account-order-item-image { width: 35px; height: 35px; flex: 0 0 auto; overflow: hidden; border-radius: 6px; background: #fff1e8; }.account-order-item-image img { width: 100%; height: 100%; object-fit: cover; }
 .account-order > b { font-size: 12px; }
 .account-order-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .account-order-footer > b { font-size: 12px; }

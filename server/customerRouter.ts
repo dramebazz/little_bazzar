@@ -14,6 +14,7 @@ export const customerRouter = router({
     return account ? { email: account.email, name: account.name } : null;
   }),
   securityQuestion: publicProcedure.query(() => recoveryQuestions[Math.floor(Math.random() * recoveryQuestions.length)]),
+  securityQuestions: publicProcedure.query(() => recoveryQuestions),
   register: publicProcedure.input(credentials.extend({
     name: z.string().trim().min(2).max(180),
     securityQuestion: z.enum(recoveryQuestions),
@@ -43,9 +44,9 @@ export const customerRouter = router({
     if (!ctx.customer) throw new TRPCError({ code: "UNAUTHORIZED", message: "Please sign in to view your orders." });
     return shopDb.listCustomerOrders(ctx.customer.email);
   }),
-  cancelOrder: publicProcedure.input(z.object({ id: z.number().int().positive() })).mutation(async ({ input, ctx }) => {
+  cancelOrder: publicProcedure.input(z.object({ id: z.number().int().positive(), reason: z.string().trim().min(1).max(500) })).mutation(async ({ input, ctx }) => {
     if (!ctx.customer) throw new TRPCError({ code: "UNAUTHORIZED", message: "Please sign in to manage your orders." });
-    await shopDb.cancelCustomerOrder(input.id, ctx.customer.email);
+    await shopDb.cancelCustomerOrder(input.id, ctx.customer.email, input.reason);
     return { success: true } as const;
   }),
 });
